@@ -1,1954 +1,2127 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <title>CHEMIBRATION · AI 기반 공정 성과 평가 데모</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --brand-pink: #D7177B;
-      --brand-purple: #551D83;
-      --brand-sky: #70C0E6;
-      --brand-teal: #008785;
-      --brand-gray: #C4C4C4;
-
-      --lg-red: var(--brand-pink);
-      --lg-gray: #6b6b6b;
-      --lg-gold: var(--brand-sky);
-      --lg-black: #231f20;
-
-      --bg: #f4f6fb;
-      --card-bg: #ffffff;
-      --border: #e1e4f1;
-      --primary: var(--brand-pink);
-      --primary-soft: rgba(215, 23, 123, 0.08);
-      --danger: #ef4444;
-      --text-main: #111827;
-      --text-sub: #4b5563;
-      --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.12);
-      --radius-lg: 18px;
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont,
-        "Segoe UI", sans-serif;
-      background: radial-gradient(circle at top left, #ffffff 0, #f4f6fb 50%, #e5e8fa 100%);
-      color: var(--text-main);
-    }
-
-    .page {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* 상단 그라데이션 바 */
-    .top-bar-wrap {
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      background: linear-gradient(90deg, #D7177B 0%, #551D83 50%, #70C0E6 100%);
-      padding-bottom: 10px;
-    }
-
-    .top-bar {
-      height: 72px;
-      max-width: 1120px;
-      margin: 0 auto;
-      color: #ffffff;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 20px;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHEMILEADER - Team Management System</title>
     
-    .top-bar-wrap {
-      display: none !important;
-    }
-    
-    .top-accent {
-      height: 0;
-      display: none;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .brand-text {
-      font-weight: 700;
-      font-size: 19px;
-      color: #ffffff;
-    }
-
-    .content-shell {
-      max-width: 1120px;
-      margin: 16px auto 32px;
-      padding: 0 20px 24px;
-    }
-
-    .content {
-      max-width: 1120px; /* 좌우 폭 넓게 사용 */
-      margin: 0 auto;
-      padding: 16px 0 0;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .top-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .user-info {
-      font-size: 13px;
-      color: #ffffff;
-      background: rgba(255,255,255,0.16);
-      padding: 6px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.35);
-      backdrop-filter: blur(10px);
-    }
-
-    /* 스텝퍼 */
-    .stepper-wrap {
-      position: relative;
-      padding: 16px 18px 18px;
-      border-radius: 18px;
-      background: rgba(255,255,255,0.95);
-      box-shadow: 0 12px 30px rgba(148, 163, 184, 0.35);
-      border: 1px solid rgba(226, 232, 240, 0.9);
-    }
-
-    .stepper-line {
-      position: absolute;
-      left: 40px;
-      right: 40px;
-      top: 36px;
-      height: 3px;
-      background: #e5e7eb;
-      border-radius: 999px;
-      overflow: hidden;
-    }
-
-    .stepper-line-fill {
-      width: 0%;
-      height: 100%;
-      background: linear-gradient(90deg, #D7177B, #551D83, #70C0E6);
-      transition: width 0.4s ease;
-    }
-
-    .stepper {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
-      position: relative;
-      z-index: 1;
-    }
-
-    .step-indicator {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 8px;
-      min-width: 90px;
-      flex: 1;
-    }
-
-    .step-indicator .circle {
-      width: 24px;
-      height: 24px;
-      border-radius: 999px;
-      border: 2px solid #d9d9f3;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      color: #6b7280;
-      background: #f9fafb;
-      box-shadow: 0 1px 3px rgba(148,163,184,0.35);
-    }
-
-    .step-indicator span.label {
-      font-weight: 500;
-      color: #6b7280;
-      font-size: 12px;
-      text-align: center;
-    }
-
-    .step-indicator.active .circle {
-      border-color: var(--brand-sky);
-      background: #ffffff;
-      color: var(--brand-pink);
-      transform: scale(1.08);
-      box-shadow: 0 0 0 2px rgba(112,192,230,0.4);
-    }
-
-    .step-indicator.completed .circle {
-      border-color: var(--brand-teal);
-      background: var(--brand-teal);
-      color: white;
-    }
-
-    .step-indicator.active span.label { color: var(--brand-pink); }
-    .step-indicator.completed span.label { color: var(--brand-teal); }
-
-    .step-panel { display: none; }
-    .step-panel.active { display: block; }
-
-    /* 패널 공통 */
-    .panel {
-      background: rgba(255,255,255,0.98);
-      border-radius: var(--radius-lg);
-      padding: 20px 20px 18px;
-      box-shadow: var(--shadow-soft);
-      border: 1px solid var(--border);
-      animation: fadeInUp 0.35s ease;
-    }
-
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(4px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .panel + .panel { margin-top: 4px; }
-
-    .section-title {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--lg-black);
-      position: relative;
-    }
-
-    .section-title::after {
-      content: "";
-      flex: 1;
-      height: 1px;
-      background: linear-gradient(90deg, #e5e7eb, transparent);
-      margin-left: 8px;
-    }
-
-    .section-title span.badge {
-      font-size: 11px;
-      padding: 3px 9px;
-      border-radius: 999px;
-      background: var(--primary-soft);
-      color: var(--primary);
-      border: 1px solid rgba(215,23,123,0.2);
-    }
-
-    .small-note {
-      font-size: 11px;
-      color: var(--text-sub);
-      margin-top: 4px;
-      line-height: 1.5;
-    }
-
-    .grid-2 {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-    }
-
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      font-size: 13px;
-    }
-
-    .field label {
-      font-weight: 500;
-      color: var(--text-sub);
-    }
-
-    .field input,
-    .field select {
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      padding: 7px 10px;
-      font-size: 13px;
-      background: #f9fafb;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s;
-    }
-
-    .field input:focus,
-    .field select:focus {
-      outline: none;
-      border-color: var(--brand-sky);
-      background: #ffffff;
-      box-shadow: 0 0 0 1px rgba(112,192,230,0.4);
-    }
-
-    .field input::placeholder { color: #9ca3af; }
-
-    .radio-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      font-size: 13px;
-      margin-top: 4px;
-    }
-
-    .radio-group label {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      padding: 3px 9px;
-      border-radius: 999px;
-      background: #f3f4f6;
-      border: 1px solid transparent;
-      transition: background 0.2s, border-color 0.2s;
-    }
-
-    .radio-group input[type="radio"] { accent-color: var(--brand-teal); }
-
-    .radio-group label:hover { background: #e5e7eb; }
-
-    .nav-buttons {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 16px;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .btn {
-      border-radius: 999px;
-      border: none;
-      padding: 9px 18px;
-      font-size: 13px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-weight: 500;
-      letter-spacing: 0.01em;
-      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #D7177B, #551D83);
-      color: white;
-      box-shadow: 0 8px 18px rgba(60,16,83,0.45);
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 10px 22px rgba(60,16,83,0.6);
-    }
-
-    .btn-secondary {
-      background: #f3f4f6;
-      color: #111827;
-      border: 1px solid var(--brand-gray);
-    }
-
-    .btn-secondary:hover {
-      background: #e5e7eb;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 10px rgba(148,163,184,0.35);
-    }
-
-    .btn-ghost {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: #374151;
-    }
-
-    .btn-ghost:hover {
-      background: #f9fafb;
-      transform: translateY(-1px);
-      box-shadow: 0 3px 8px rgba(148,163,184,0.25);
-    }
-
-    .btn-mini {
-      border-radius: 999px;
-      border: none;
-      padding: 4px 8px;
-      font-size: 11px;
-      cursor: pointer;
-      transition: background 0.12s, transform 0.12s;
-    }
-
-    .btn-mini-primary {
-      background: var(--brand-pink);
-      color: white;
-    }
-
-    .btn-mini-primary:hover { transform: translateY(-1px); }
-
-    .btn-mini-secondary {
-      background: #e5e7eb;
-      color: #111827;
-    }
-
-    .btn-mini-secondary:hover {
-      background: #d1d5db;
-      transform: translateY(-1px);
-    }
-
-    .chart-card {
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--border);
-      padding: 14px 14px 10px;
-      margin-top: 8px;
-      background: linear-gradient(135deg, #f9fafb, #f4f6fb);
-    }
-
-    .chart-legend {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 11px;
-      color: var(--text-sub);
-      margin-top: 4px;
-      flex-wrap: wrap;
-      gap: 4px;
-    }
-
-    .legend-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-      display: inline-block;
-      margin-right: 4px;
-      background: var(--lg-gray);
-    }
-
-    .legend-dot.gold { background: var(--brand-sky); }
-    .legend-dot.red { background: var(--brand-pink); }
-
-    .chart-placeholder {
-      text-align: center;
-      padding: 32px 0 26px;
-      font-size: 12px;
-      color: var(--text-sub);
-      border-radius: 14px;
-      border: 1px dashed var(--brand-gray);
-      background: #f9fafb;
-    }
-
-    /* 핵심 가치 준수도 카드 */
-    .core-values-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-      margin-top: 8px;
-    }
-
-    .core-value-card {
-      border-radius: 14px;
-      border: 1px solid #e1e4f1;
-      padding: 9px 11px;
-      background: linear-gradient(135deg, #fdfdff, #f4f6fb);
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-    }
-
-    .core-value-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 9px 22px rgba(148,163,184,0.45);
-      border-color: rgba(85,29,131,0.4);
-    }
-
-    .core-value-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--lg-black);
-    }
-
-    .core-value-sub {
-      font-size: 11px;
-      color: var(--text-sub);
-    }
-
-    .score-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-top: 4px;
-    }
-
-    .score-row input[type="range"] {
-      flex: 1;
-      accent-color: var(--brand-pink);
-    }
-
-    .score-value {
-      font-size: 12px;
-      width: 32px;
-      text-align: right;
-      font-weight: 600;
-      color: var(--lg-black);
-    }
-
-    .deviation-pill {
-      font-size: 11px;
-      padding: 2px 7px;
-      border-radius: 999px;
-      background: #fee2e2;
-      color: var(--danger);
-      display: none;
-      border: 1px solid #fecaca;
-    }
-
-    .deviation-pill.visible { display: inline-flex; }
-
-    .deviation-inline {
-      margin-top: 6px;
-      padding: 6px 8px;
-      border-radius: 8px;
-      background: #fef2f2;
-      border: 1px solid #fecaca;
-      font-size: 11px;
-      color: #7f1d1d;
-    }
-
-    .deviation-inline strong { color: #7f1d1d; }
-
-    .deviation-inline .buttons {
-      margin-top: 4px;
-      display: flex;
-      gap: 4px;
-    }
-
-    .comment-area {
-      width: 100%;
-      min-height: 80px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      padding: 8px 10px;
-      font-size: 13px;
-      resize: vertical;
-      background: #f9fafb;
-      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-    }
-
-    .comment-area:focus {
-      outline: none;
-      border-color: var(--brand-sky);
-      background: #ffffff;
-      box-shadow: 0 0 0 1px rgba(112,192,230,0.4);
-    }
-
-    /* Step3 */
-    .ai-result-grade {
-      font-size: 22px;
-      font-weight: 700;
-      margin-bottom: 4px;
-      color: var(--lg-black);
-    }
-    .ai-result-subgrade {
-      font-size: 14px;
-      font-weight: 500;
-      margin-bottom: 10px;
-      color: var(--text-sub);
-    }
-
-    .ai-explanation p {
-      font-size: 13px;
-      margin: 4px 0;
-      line-height: 1.6;
-      color: var(--text-sub);
-    }
-
-    .ai-explanation p strong { color: var(--lg-black); }
-
-    .grade-row {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 13px;
-    }
-
-    .grade-row select {
-      padding: 5px 11px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      font-size: 13px;
-      max-width: 150px;
-      background: #f9fafb;
-    }
-
-    .grade-warning {
-      font-size: 12px;
-      background: #fef3c7;
-      color: #92400e;
-      padding: 6px 8px;
-      border-radius: 8px;
-      margin-top: 4px;
-      border: 1px solid #fde68a;
-    }
-
-    .hidden { display: none !important; }
-
-    /* 로딩 오버레이 */
-    .loading-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(15,23,42,0.55);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 60;
-    }
-
-    .loading-card {
-      background: #ffffff;
-      border-radius: 18px;
-      padding: 18px 24px 16px;
-      box-shadow: 0 24px 60px rgba(15,23,42,0.6);
-      text-align: center;
-      max-width: 260px;
-    }
-
-    .loading-card p {
-      font-size: 13px;
-      margin: 4px 0 10px;
-      color: #4b5563;
-    }
-
-    .spinner {
-      width: 28px;
-      height: 28px;
-      border-radius: 999px;
-      border: 3px solid #e5e7eb;
-      border-top-color: var(--brand-pink);
-      margin: 0 auto;
-      animation: spin 0.9s linear infinite;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* 모달 공통 */
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(15,23,42,0.6);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 55;
-    }
-
-    .modal {
-      width: min(640px, 90%);
-      background: #ffffff;
-      border-radius: 18px;
-      padding: 18px 20px 16px;
-      box-shadow: 0 24px 60px rgba(15,23,42,0.7);
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 6px;
-    }
-
-    .modal-title {
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    .modal-sub {
-      font-size: 11px;
-      color: var(--text-sub);
-      margin-bottom: 8px;
-    }
-
-    .chip-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 8px;
-    }
-
-    .chip {
-      border-radius: 999px;
-      border: 1px solid #e5e7eb;
-      padding: 4px 8px;
-      font-size: 11px;
-      cursor: pointer;
-      background: #f9fafb;
-      color: #374151;
-      transition: background 0.15s, border-color 0.15s, color 0.15s;
-    }
-
-    .chip.active {
-      background: var(--brand-pink);
-      border-color: var(--brand-pink);
-      color: #ffffff;
-    }
-
-    .modal-body-box {
-      border-radius: 10px;
-      border: 1px solid #e5e7f1;
-      padding: 8px 10px;
-      background: #f9fafb;
-      font-size: 12px;
-      color: #374151;
-      line-height: 1.5;
-      min-height: 60px;
-    }
-
-    .modal-footer {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 10px;
-    }
-
-    @media (max-width: 720px) {
-      .core-values-grid,
-      .grid-2 { grid-template-columns: 1fr; }
-      .content-shell { padding: 0 12px 24px; }
-      .top-bar { padding: 0 12px; }
-      .stepper-wrap { padding: 14px 14px 16px; }
-      .stepper-line { left: 24px; right: 24px; }
-    }
-    
-    .top-bar-wrap {
-      display: none !important;
-    }
-
-    body {
-      font-size: 15px;
-    }
-
-    .section-title {
-      font-size: 18px;
-    }
-
-    .field,
-    .field label {
-      font-size: 14px;
-    }
-
-    .field input,
-    .field select,
-    .radio-group,
-    .comment-area,
-    .ai-explanation p,
-    .grade-row,
-    .user-info {
-      font-size: 14px;
-    }
-
-    .small-note,
-    .core-value-sub,
-    .chart-legend,
-    .deviation-pill,
-    .deviation-inline,
-    .grade-warning,
-    .modal-sub {
-      font-size: 12px;
-    }
-
-    .content-shell {
-      max-width: 1200px;     
-      margin: 16px auto 32px;
-      padding: 0 0 24px;    
-    }
-
-    .content {
-      max-width: 1200px;
-      margin: 0 auto;        
-    }
-
-    .panel {
-      max-width: 1200px; 
-      margin-left: 0;
-      margin-right: 0;
-    }
-    
-  </style>
-  
+    <!-- 폰트: Noto Sans KR -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        /* [디자인 시스템] */
+        :root {
+            --color-magenta: #D7177B;
+            --color-purple: #551D83;
+            --color-lightblue: #70C0E6;
+            --color-teal: #008785;
+            --color-bg-gray: #F5F5F5;
+            --sidebar-width: 240px;
+            --header-height: 70px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--color-bg-gray);
+            color: #333;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ---------------------------------------------------------
+           1. 로그인 페이지
+           --------------------------------------------------------- */
+        #login-page {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #ffffff;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9999;
+        }
+        .login-card { background: #ffffff; padding: 60px 50px; width: 100%; max-width: 420px; text-align: center; }
+        .login-logo {
+            font-size: 42px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 40px;
+            background: linear-gradient(90deg, var(--color-magenta) 0%, var(--color-purple) 50%, var(--color-lightblue) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; color: transparent;
+        }
+        .input-group { margin-bottom: 20px; text-align: left; }
+        .input-label { font-size: 13px; font-weight: 700; color: #555; margin-bottom: 8px; display: block; }
+        .login-input { width: 100%; padding: 14px 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; outline: none; transition: 0.2s; background: #f9f9f9; color: #333; }
+        .login-input:focus { border-color: var(--color-purple); background: #fff; box-shadow: 0 0 0 3px rgba(85, 29, 131, 0.1); }
+        .login-btn {
+            width: 100%; padding: 16px; margin-top: 24px;
+            background: linear-gradient(90deg, var(--color-magenta) 0%, var(--color-purple) 50%, var(--color-lightblue) 100%);
+            color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.2s;
+            box-shadow: 0 4px 15px rgba(85, 29, 131, 0.25);
+        }
+        .login-btn:hover { transform: translateY(-2px); opacity: 0.95; }
+        .login-btn:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; opacity: 0.7; }
+        .login-footer { margin-top: 32px; font-size: 12px; color: #aaa; }
+
+        /* ---------------------------------------------------------
+           2. 메인 레이아웃
+           --------------------------------------------------------- */
+        #main-app { display: none; width: 100%; height: 100%; flex-direction: column; }
+
+        /* 상단 헤더 */
+        .main-header {
+            height: var(--header-height); 
+            background: linear-gradient(90deg, var(--color-magenta) 0%, var(--color-purple) 50%, var(--color-lightblue) 100%);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 40px; flex-shrink: 0; color: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 200;
+        }
+        .header-logo { font-size: 24px; font-weight: 900; color: #fff; letter-spacing: -0.5px; cursor: pointer; }
+        .search-box {
+            background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 8px 20px; outline: none; width: 280px; font-size: 14px; transition: 0.3s; color: #fff;
+        }
+        .search-box:focus { background: rgba(255,255,255,0.3); border-color: #fff; }
+        .search-box::placeholder { color: rgba(255,255,255,0.7); }
+        
+        .logout-btn {
+            background: transparent; border: 1px solid rgba(255,255,255,0.4); color: #fff;
+            padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.2s;
+            margin-left: 10px;
+        }
+        .logout-btn:hover { background: rgba(255,255,255,0.2); border-color: #fff; }
+
+        .app-body { display: flex; flex: 1; overflow: hidden; }
+
+        /* 사이드바 */
+        .main-sidebar {
+            width: var(--sidebar-width); background: #fff; border-right: 1px solid #e0e0e0;
+            display: flex; flex-direction: column; flex-shrink: 0; z-index: 100;
+            padding-top: 20px;
+        }
+        .main-menu { list-style: none; padding: 0 12px; }
+        .menu-item {
+            padding: 16px 20px; border-radius: 12px; margin-bottom: 8px; cursor: pointer;
+            font-size: 16px; font-weight: 700; color: #555; transition: 0.2s; display: flex; align-items: center; gap: 12px;
+        }
+        .menu-item:hover { background-color: #f5f5f5; color: var(--color-purple); }
+        .menu-item.active { background-color: #f4eff9; color: var(--color-purple); }
+        
+        .member-list-sidebar {
+            list-style: none; padding: 20px 12px; border-top: 1px solid #eee; flex: 1; overflow-y: auto;
+            display: none;
+        }
+        .member-list-item {
+            padding: 12px 20px; border-radius: 8px; margin-bottom: 4px; cursor: pointer;
+            font-size: 14px; font-weight: 500; color: #666; transition: 0.2s; display: flex; align-items: center; gap: 10px;
+        }
+        .member-list-item:hover { background-color: #f9f9f9; color: var(--color-purple); }
+        .member-list-item.active { background-color: #f4eff9; color: var(--color-purple); font-weight: 700; }
+        .ml-avatar { font-size: 18px; }
+
+        .leader-profile { margin-top: auto; padding: 24px; border-top: 1px solid #eee; display: flex; align-items: center; gap: 12px; }
+        .lp-avatar { width: 40px; height: 40px; border-radius: 50%; background: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .lp-info { display: flex; flex-direction: column; }
+        .lp-name { font-size: 14px; font-weight: 700; }
+        .lp-role { font-size: 11px; color: #888; }
+
+        /* 컨텐츠 영역 */
+        .content-container { flex: 1; background-color: var(--color-bg-gray); overflow-y: auto; padding: 0; position: relative; display: flex; flex-direction: column; }
+        
+        .view-section { display: none; padding: 0; max-width: 1200px; margin: 0 auto; width: 100%; animation: fadeIn 0.3s; }
+        .view-section.active { display: block; }
+        
+        #view-dashboard { padding: 40px; }
+        #view-feedback-list { padding: 40px; }
+
+        /* [VIEW 1] 대시보드 */
+        .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; height: 100%; }
+        .dash-card { background: #fff; border-radius: 16px; padding: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #eee; display: flex; flex-direction: column; }
+        .dash-header { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #f5f5f5; }
+        .dash-welcome { font-size: 26px; font-weight: 700; color: #333; margin-bottom: 8px; }
+        .dash-sub { color: #666; font-size: 15px; }
+        .dash-info-block { margin-bottom: 30px; }
+        .dash-info-title { font-size: 15px; font-weight: 700; color: var(--color-purple); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .dash-info-content { font-size: 18px; font-weight: 600; color: #333; line-height: 1.4; }
+        
+        .dash-project-list { display: flex; flex-direction: column; gap: 10px; }
+        .dash-project-item { background: #f9f9f9; padding: 12px 16px; border-radius: 8px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .proj-status { font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: 700; }
+        .status-ongoing { background: #e3f2fd; color: #0277bd; }
+        .status-urgent { background: #ffebee; color: #c62828; }
+
+        .dash-issue-list { display: flex; flex-direction: column; gap: 10px; }
+        .issue-item { padding: 14px; border: 1px solid #eee; border-radius: 10px; display: flex; align-items: center; gap: 12px; background: #fff; transition: 0.2s; }
+        .issue-item:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .issue-icon { font-size: 20px; }
+        .issue-content { flex: 1; }
+        .issue-name { font-weight: 700; font-size: 14px; margin-bottom: 2px; color: #333; }
+        .issue-desc { font-size: 13px; color: #666; }
+        .issue-tag { font-size: 11px; padding: 4px 8px; border-radius: 12px; background: #fef3c7; color: #d97706; font-weight: 600; }
+
+        .memo-area { width: 100%; height: 150px; border: none; background: #fff9c4; padding: 20px; border-radius: 8px; resize: none; font-size: 14px; line-height: 1.6; color: #555; box-shadow: inset 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 10px; }
+        .memo-area:focus { outline: none; }
+        .memo-btn { width: 100%; padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; cursor: pointer; font-weight: 600; color: #666; }
+        .memo-btn:hover { background: #f5f5f5; }
+
+        .cheer-card { background: linear-gradient(135deg, #f0faff 0%, #ffffff 100%); border: 1px solid #cceeff; text-align: center; align-items: center; justify-content: center; flex: 1; }
+        .cheer-icon { font-size: 50px; margin-bottom: 16px; animation: float 3s infinite ease-in-out; }
+        .cheer-text { font-size: 16px; font-weight: 700; color: var(--color-teal); line-height: 1.6; }
+
+        /* [VIEW 3] 피드백 목록 */
+        .member-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
+        .member-card { background: #fff; border-radius: 16px; padding: 30px 24px; border: 1px solid #eee; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+        .member-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(85,29,131,0.1); border-color: var(--color-purple); }
+        .mc-avatar { width: 90px; height: 90px; background: #f9f9f9; border-radius: 50%; font-size: 40px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .mc-name { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+        .mc-role { font-size: 14px; color: #888; margin-bottom: 20px; }
+        .mc-tags { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+        .mc-tag { font-size: 12px; background: #f0f4f8; padding: 4px 10px; border-radius: 20px; color: #555; font-weight: 500; }
+
+        /* [VIEW 4 & VIEW 2 공통] Full Width Container */
+        .detail-container { display: none; flex-direction: column; height: 100%; padding: 0; max-width: none; width: 100%; }
+        .detail-container.active { display: flex; animation: fadeIn 0.3s; }
+
+        .detail-scroll-wrapper { flex: 1; overflow-y: auto; width: 100%; }
+
+        /* [공통] 탭 Wrapper 스타일 */
+        .detail-tabs-wrapper { background: #fff; border-bottom: 1px solid #eee; display: flex; justify-content: center; padding: 0; flex-shrink: 0; width: 100%; }
+        .detail-tabs { display: flex; gap: 60px; } 
+        .detail-tab { padding: 18px 10px 14px; font-size: 18px; font-weight: 500; color: #999; cursor: pointer; transition: 0.2s; border-bottom: 3px solid transparent; letter-spacing: -0.5px; }
+        .detail-tab:hover { color: #555; }
+        .detail-tab.active { color: var(--color-purple); font-weight: 700; border-bottom-color: var(--color-purple); }
+
+        .detail-content-area { padding: 30px 40px; max-width: 1200px; margin: 0 auto; width: 100%; }
+        
+        .detail-header { display: flex; align-items: center; gap: 20px; margin-bottom: 20px; }
+        .btn-back { padding: 8px 14px; background: #fff; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; font-weight: 600; color: #555; display: flex; align-items: center; gap: 6px; transition: 0.2s; font-size: 13px; }
+        .btn-back:hover { background: #f5f5f5; color: #333; }
+
+        .detail-content { display: none; animation: fadeIn 0.3s; }
+        .detail-content.active { display: block; }
+        
+        .eval-content-area { padding: 30px 40px; max-width: 1200px; margin: 0 auto; width: 100%; }
+        .eval-placeholder { text-align: center; padding: 100px 0; color: #aaa; font-size: 16px; background: #fff; border-radius: 12px; border: 1px dashed #ddd; }
+
+
+        /* 상세 공통 */
+        .card { background: #fff; border-radius: 16px; padding: 28px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 1px solid #eee; margin-bottom: 24px; position: relative; }
+        .card-head { font-size: 18px; font-weight: 700; color: #333; margin-bottom: 20px; border-bottom: 1px solid #f5f5f5; padding-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+
+        /* Grid Layouts */
+        .grid-basic { display: grid; grid-template-columns: 320px 1fr; gap: 24px; }
+        .grid-half { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .grid-half .card { height: 100%; display: flex; flex-direction: column; }
+        .grid-career-growth { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+        .grid-career-growth .card { margin-bottom: 0; height: 100%; }
+
+        /* Basic Tab Elements */
+        .profile-lg-box { text-align: center; }
+        .profile-lg-img { width: 120px; height: 120px; background: #f0f0f0; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 50px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        .skill-row { margin-bottom: 16px; }
+        .skill-info { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+        .progress-track { width: 100%; height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
+        .swot-box { display: flex; gap: 20px; }
+        .swot-col { flex: 1; }
+        .swot-head { font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        .swot-item { font-size: 13px; padding: 10px 12px; background: #f9f9f9; border-radius: 8px; margin-bottom: 6px; border: 1px solid #f0f0f0; }
+        .timeline-item { position: relative; padding-left: 20px; padding-bottom: 24px; border-left: 2px solid #eee; }
+        .timeline-item::before { content:''; position: absolute; left: -6px; top: 0; width: 10px; height: 10px; border-radius: 50%; background: #fff; border: 3px solid var(--color-purple); }
+        .tl-date { font-size: 13px; font-weight: 700; color: var(--color-purple); }
+        .tl-title { font-size: 15px; font-weight: 700; margin-top: 4px; }
+        .tl-desc { font-size: 13px; color: #666; margin-top: 2px; }
+
+        /* Growth Box UI */
+        .growth-box-container { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 10px; }
+        .growth-box { 
+            flex: 1; background: #f9f9f9; border: 1px solid #eee; border-radius: 12px; padding: 20px 16px; 
+            display: flex; flex-direction: column; align-items: center; text-align: center; transition: 0.2s; position: relative; 
+            min-height: 140px; justify-content: center;
+        }
+        .growth-box.active { background: #f4eff9; border-color: var(--color-purple); box-shadow: 0 4px 12px rgba(85, 29, 131, 0.08); }
+        .gb-label { font-size: 12px; font-weight: 700; color: #888; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .growth-box.active .gb-label { color: var(--color-purple); }
+        .gb-content { font-size: 14px; color: #333; font-weight: 600; line-height: 1.5; word-break: keep-all; }
+        .growth-arrow { font-size: 18px; color: #ddd; font-weight: 700; }
+
+        /* File Donut Viewer UI (Radial Menu) */
+        .card.growth-card-wrapper {
+            padding-bottom: 180px; 
+        }
+
+        .file-donut-wrapper {
+            position: absolute;
+            bottom: 15px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            width: 60px; 
+            height: 60px;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .file-donut-toggle {
+            width: 60px; 
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--color-purple) 0%, var(--color-magenta) 100%);
+            color: #fff;
+            font-size: 24px; 
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(85, 29, 131, 0.4);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+        .file-donut-toggle:hover { transform: scale(1.1); }
+        .file-donut-toggle:active { transform: scale(0.95); }
+
+        .file-donut-menu {
+            position: absolute;
+            top: 30px; 
+            left: 30px;
+            width: 0;
+            height: 0;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .file-donut-menu.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .file-donut-item {
+            position: absolute;
+            width: 50px; 
+            height: 50px;
+            border-radius: 50%;
+            background: #fff;
+            border: 1px solid #eee;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 22px; 
+            text-decoration: none;
+            left: 0;
+            top: 0;
+            margin-left: -25px; 
+            margin-top: -25px;
+            transform: translate(var(--tx), var(--ty)) scale(0);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .file-donut-menu.open .file-donut-item {
+            transform: translate(var(--tx), var(--ty)) scale(1);
+        }
+
+        .file-donut-item:hover {
+            background: #f4eff9;
+            border-color: var(--color-purple);
+            transform: translate(var(--tx), var(--ty)) scale(1.2) !important;
+            z-index: 150;
+        }
+        
+        .file-donut-item::after {
+            content: attr(data-label);
+            position: absolute;
+            bottom: -24px; 
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            background: #fff;
+            border: 1px solid #ddd;
+            color: #333;
+            padding: 2px 8px;
+            border-radius: 12px;
+            white-space: nowrap;
+            opacity: 1; 
+            pointer-events: none;
+            transition: 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+            font-weight: 600;
+            z-index: 200;
+        }
+        
+        .file-donut-item:hover::after {
+            background: var(--color-purple);
+            color: #fff;
+            border-color: var(--color-purple);
+        }
+
+        /* Mobile: List View Fallback */
+        .file-list-mobile {
+            display: none;
+            width: 100%;
+            overflow-x: auto;
+            padding: 10px 0;
+            gap: 10px;
+        }
+        .file-chip {
+            padding: 8px 12px;
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 20px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            cursor: pointer;
+            color: #333;
+            text-decoration: none;
+        }
+        .file-chip:hover { background: #eee; }
+
+        /* Perf Tab Elements */
+        .eval-grade-card { background: linear-gradient(135deg, #222 0%, #444 100%); color: #fff; border-radius: 16px; padding: 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); margin-bottom: 24px; }
+        .grade-big { font-size: 72px; font-weight: 900; line-height: 1; text-shadow: 0 0 20px rgba(255,255,255,0.3); margin-top: 10px; }
+        .grade-info-right { text-align: right; }
+        .grade-info-item { font-size: 16px; margin-bottom: 8px; opacity: 0.8; }
+        .grade-info-score { font-size: 28px; font-weight: 700; margin-left: 8px; }
+        .kpi-donut-wrapper { display: flex; align-items: center; justify-content: center; gap: 40px; }
+        .kpi-text { text-align: left; }
+        .career-path-vertical { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 20px 0; }
+        .cp-node { padding: 16px 20px; background: #f5f5f5; border-radius: 12px; font-weight: 700; color: #333; width: 100%; text-align: center; font-size: 15px; }
+        .cp-node.future { background: #f4eff9; color: var(--color-purple); border: 1px solid var(--color-purple); }
+        .cp-arrow-down { font-size: 24px; color: #ddd; line-height: 1; }
+        .goal-list { list-style: none; padding: 0; margin: 0; }
+        .goal-item { padding: 12px; background: #f9f9f9; border-radius: 8px; margin-bottom: 8px; font-size: 13px; color: #444; line-height: 1.5; display: flex; align-items: flex-start; gap: 8px; }
+        .goal-item::before { content:'•'; color:var(--color-teal); font-weight:bold; }
+
+        /* Roadmap Elements */
+        .roadmap-list { display: flex; flex-direction: column; gap: 12px; }
+        .roadmap-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: #f9f9f9; border-radius: 8px; transition: 0.2s; cursor: default; }
+        .roadmap-item:hover { background: #f9f9f9; }
+        .roadmap-item.checked { background: #f4eff9; }
+        .roadmap-item.checked .rm-text { text-decoration: line-through; color: #888; }
+        .rm-checkbox { width: 20px; height: 20px; border: 2px solid var(--color-purple); border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0;}
+        .roadmap-item.checked .rm-checkbox { background: var(--color-purple); }
+        .rm-checkbox::after { content: '✔'; color: #fff; font-size: 12px; display: none; }
+        .roadmap-item.checked .rm-checkbox::after { display: block; }
+        .rm-text { font-size: 14px; font-weight: 500; color: #333; }
+
+        /* Feedback Tab Elements */
+        .preference-card { background: linear-gradient(135deg, #f0faff 0%, #ffffff 100%); border: 1px solid var(--color-lightblue); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+        .pref-header { font-size: 18px; font-weight: 700; color: var(--color-teal); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .pref-grid { display: flex; gap: 16px; margin-bottom: 16px; }
+        .pref-item { 
+            flex: 1; background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; padding: 16px; text-align: center; 
+            display: flex; flex-direction: column; align-items: center; gap: 8px; transition: 0.2s;
+        }
+        .pref-item.highlight { border-color: var(--color-purple); background: #f9f4ff; box-shadow: 0 4px 12px rgba(85,29,131,0.05); }
+        .pref-icon { font-size: 24px; margin-bottom: 4px; }
+        .pref-label { font-size: 12px; color: #888; font-weight: 500; }
+        .pref-val { font-size: 16px; font-weight: 700; color: var(--color-purple); }
+        .pref-sub-desc { font-size: 12px; color: #666; margin-top: 4px; background: rgba(0,0,0,0.03); padding: 6px 10px; border-radius: 6px; width: 100%; word-break: keep-all; line-height: 1.4; }
+        .pref-guide-box { font-size: 14px; color: #555; background: #fff; padding: 12px 16px; border-radius: 8px; border: 1px solid #eee; display: flex; align-items: center; gap: 8px; }
+
+        .fb-input-grid { display: flex; flex-direction: column; gap: 20px; margin-bottom: 20px; }
+        .fb-card-small { background: #fcfcfc; border: 1px solid #eee; padding: 16px; border-radius: 12px; }
+        .fb-label { font-size: 14px; font-weight: 700; margin-bottom: 10px; display: block; }
+        .fb-desc-sub { font-size: 13px; color: #666; margin-bottom: 16px; }
+        .fb-textarea { width: 100%; height: 100px; border: 1px solid #ddd; border-radius: 8px; padding: 12px; resize: none; font-family: inherit; font-size: 14px; outline: none; transition: 0.2s; }
+        .fb-textarea::placeholder { color: #999; font-size: 13px; font-weight: 400; }
+        .fb-textarea:focus { border-color: var(--color-purple); background: #fff; }
+        
+        .evidence-container { background: #f9f9f9; padding: 24px; border-radius: 12px; margin-bottom: 20px; display: block; }
+        .evidence-container.active { animation: fadeIn 0.3s; }
+        .evidence-grid { 
+            display: grid; grid-template-columns: 1fr; gap: 12px; max-height: 400px; overflow-y: auto; padding-right: 8px; 
+        }
+        .evidence-grid::-webkit-scrollbar { width: 6px; }
+        .evidence-grid::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+        .evidence-grid::-webkit-scrollbar-track { background: transparent; }
+
+        .evidence-box { 
+            background: #fff; border: 1px solid #ddd; padding: 16px; border-radius: 10px; cursor: pointer; transition: 0.2s; position: relative; display: flex; flex-direction: row; align-items: center; justify-content: space-between;
+        }
+        .evidence-box:hover { border-color: var(--color-lightblue); transform: translateX(2px); }
+        .evidence-box.selected { border: 2px solid var(--color-purple); background: #f9f4ff; }
+        .evidence-box.selected::after { display: none; }
+
+        .ev-content-wrapper { flex: 1; margin-right: 12px; }
+        .ev-title { font-size: 13px; font-weight: 700; color: var(--color-purple); margin-bottom: 4px; }
+        .ev-text { font-size: 14px; line-height: 1.4; color: #333; margin-bottom: 0; word-break: keep-all; }
+        
+        .ev-controls { display: flex; flex-direction: column; gap: 6px; margin-top: 0; flex-shrink: 0; }
+        .btn-xs { padding: 6px 10px; font-size: 11px; border-radius: 6px; border: 1px solid #ddd; background: #fff; cursor: pointer; color: #666; transition: 0.2s; white-space: nowrap;}
+        .btn-xs:hover { background: #eee; }
+        .ev-controls button:disabled { background-color: #f0f0f0; color: #ccc; border-color: #eee; cursor: not-allowed; }
+
+        .btn-select { background: #fff; color: var(--color-purple); border: 1px solid var(--color-purple); font-weight: 700; }
+        .btn-select:hover { background: #f4eff9; }
+        .btn-select.active { background: var(--color-purple); color: #fff; border-color: var(--color-purple); }
+        
+        .final-msg-box { width: 100%; height: 200px; border: 1px solid #e0e0e0; border-radius: 12px; padding: 20px; font-size: 15px; line-height: 1.6; resize: none; outline: none; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes float { 0% { transform: translateY(0); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0); } }
+
+        @media (max-width: 768px) {
+            .app-body { flex-direction: column; overflow-y: auto; }
+            .main-sidebar { width: 100%; height: auto; flex-direction: row; padding: 10px; border-right: none; border-bottom: 1px solid #e0e0e0; justify-content: space-around; align-items: center; flex-shrink: 0; }
+            .leader-profile { display: none; }
+            .main-menu { display: flex; margin-top: 0; padding: 0; width: 100%; justify-content: space-around; }
+            .menu-item { margin-bottom: 0; padding: 10px; font-size: 14px; }
+            .member-list-sidebar { display: none !important; }
+            .content-container { overflow-y: visible; }
+            .detail-content-area { padding: 20px; }
+            .view-section { padding: 20px; }
+            .dashboard-grid, .grid-basic, .grid-half, .grid-career-growth, .fb-input-grid, .evidence-grid, .pref-grid { grid-template-columns: 1fr !important; gap: 16px; }
+            .detail-tabs { gap: 20px; }
+            .detail-tab { font-size: 16px; padding: 14px 6px; }
+            .grade-big { font-size: 50px; }
+            .evidence-box { flex-direction: column; align-items: flex-start; }
+            .ev-controls { flex-direction: row; width: 100%; justify-content: flex-end; margin-top: 10px; }
+            
+            /* Mobile File Fallback */
+            .file-donut-wrapper { display: none !important; }
+            .file-list-mobile { display: flex !important; }
+            .file-viewer-area { height: auto !important; padding: 10px !important; }
+            .card.growth-card-wrapper { padding-bottom: 28px; }
+        }
+    </style>
 </head>
 <body>
-  <div class="page">
-    <div class="top-bar-wrap">
-      <div class="top-accent"></div>
-      <header class="top-bar">
-        <div class="brand">
-          <div class="brand-text">CHEMIBRATION</div>
+
+    <!-- 로그인 페이지 -->
+    <div id="login-page">
+        <div class="login-card">
+            <div class="login-logo">CHEMILEADER</div>
+            <div class="input-group">
+                <label class="input-label">아이디</label>
+                <input type="text" id="login-id" class="login-input" placeholder="ID를 입력하세요">
+            </div>
+            <div class="input-group">
+                <label class="input-label">비밀번호</label>
+                <input type="password" id="login-pw" class="login-input" placeholder="비밀번호를 입력하세요">
+            </div>
+            <button class="login-btn" id="btn-login-action">로그인</button>
+            <div class="login-footer">Copyright © HEROS_B. All Rights Reserved.</div>
         </div>
-        <div class="top-right">
-          <div class="user-info">리더: 박엘지</div>
-        </div>
-      </header>
     </div>
 
-    <div class="content-shell">
-      <section class="stepper-wrap">
-        <div class="stepper-line">
-          <div class="stepper-line-fill" id="stepperFill"></div>
+    <!-- 메인 앱 -->
+    <div id="main-app">
+        <header class="main-header">
+            <div class="header-logo" id="btn-home-action">CHEMILEADER</div>
+            <div style="display: flex; align-items: center;">
+                <input type="text" id="top-search-input" class="search-box" placeholder="팀원, 부서 검색">
+                <button class="logout-btn" id="btn-logout-action">로그아웃</button>
+            </div>
+        </header>
+
+        <div class="app-body">
+            <nav class="main-sidebar">
+                <ul class="main-menu">
+                    <li class="menu-item" id="menu-eval">📊 CHEMIBRATION</li>
+                    <li class="menu-item" id="menu-feedback">💬 CHEMISTREE</li>
+                </ul>
+                <ul class="member-list-sidebar" id="member-list-sidebar"></ul>
+                <div class="leader-profile">
+                    <div class="lp-avatar">👨🏻‍💼</div>
+                    <div class="lp-info">
+                        <div class="lp-name">박엘지 팀장</div>
+                        <div class="lp-role">DX 추진팀</div>
+                    </div>
+                </div>
+            </nav>
+
+            <main class="content-container">
+                <!-- [VIEW 1] 대시보드 -->
+                <section id="view-dashboard" class="view-section active">
+                    <div class="dashboard-grid">
+                        <!-- 왼쪽 메인 카드 -->
+                        <div class="dash-card">
+                            <div class="dash-header">
+                                <div class="dash-welcome">박엘지 팀장님, 안녕하세요! 👋</div>
+                                <div class="dash-sub">오늘도 팀원들과 함께 성장하는 하루 되세요.</div>
+                            </div>
+                            <div class="dash-info-block">
+                                <div class="dash-info-title">🎯 2025 팀 목표</div>
+                                <div class="dash-info-content">데이터 기반의 R&D/제조 혁신을 통한<br>전사적 DX 가속화 및 생산성 극대화</div>
+                            </div>
+                            <div class="dash-info-block">
+                                <div class="dash-info-title" style="color:#d97706;">📢 금주 팀원 특이사항</div>
+                                <div class="dash-issue-list">
+                                    <div class="issue-item">
+                                        <div class="issue-icon">🔥</div>
+                                        <div class="issue-content">
+                                            <div class="issue-name">박재현 책임</div>
+                                            <div class="issue-desc">신규 기능 배포로 인한 3일 연속 야근 (컨디션 체크 필요)</div>
+                                        </div>
+                                        <div class="issue-tag">Care 필요</div>
+                                    </div>
+                                    <div class="issue-item">
+                                        <div class="issue-icon">🏥</div>
+                                        <div class="issue-content">
+                                            <div class="issue-name">박태희 선임</div>
+                                            <div class="issue-desc">건강검진으로 금요일 오후 반차 예정</div>
+                                        </div>
+                                        <div class="issue-tag">일정 공유</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dash-info-block" style="margin-bottom:0;">
+                                <div class="dash-info-title">🚀 주요 프로젝트 현황</div>
+                                <div class="dash-project-list">
+                                    <div class="dash-project-item">
+                                        <span>🏭 Smart Factory Phase 2</span>
+                                        <span class="proj-status status-ongoing">진행중</span>
+                                    </div>
+                                    <div class="dash-project-item">
+                                        <span>🤖 AI Safety Model 고도화</span>
+                                        <span class="proj-status status-urgent">이슈 점검</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 24px; height:100%;">
+                            <div class="dash-card" style="flex:0 auto; padding: 20px;">
+                                <div style="font-size:14px; font-weight:700; color:#555; margin-bottom:10px;">📒 Quick Memo</div>
+                                <textarea class="memo-area" placeholder="팀원들에게 전달할 내용이나 아이디어를 적어두세요."></textarea>
+                                <button class="memo-btn">메모 저장</button>
+                            </div>
+                            <div class="dash-card cheer-card">
+                                <div class="cheer-icon">🍀</div>
+                                <div class="cheer-text">"LG화학의 THE 좋은 리더는<br>팀원의 성장을 이끕니다"<br><br>오늘도 힘찬 하루<br>응원합니다!</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- [VIEW 2] 평가 -->
+                <section id="view-evaluation" class="detail-container">
+                    <div class="detail-scroll-wrapper">
+                        <div class="eval-content-area">
+                            <iframe 
+                                id="chemibration-frame"
+                                data-src="chemibration-demo.html"
+                                src=""
+                                style="width: 100%; height: 1700px; border: none; border-radius: 12px; overflow: hidden;">
+                            </iframe>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- [VIEW 3] 피드백 목록 -->
+                <section id="view-feedback-list" class="view-section">
+                    <div style="margin-bottom:24px;">
+                        <div style="font-size:24px; font-weight:700;">팀원 피드백</div>
+                        <div style="color:#888; font-size:14px;">팀원을 선택하여 상세 피드백을 작성하세요.</div>
+                    </div>
+                    <div class="member-grid" id="member-card-container"></div>
+                </section>
+
+                <!-- [VIEW 4] 피드백 상세 -->
+                <section id="view-feedback-detail" class="detail-container">
+                    <div class="detail-tabs-wrapper">
+                        <div class="detail-tabs">
+                            <div class="detail-tab active" onclick="switchDetailTab('basic', this)">기본정보</div>
+                            <div class="detail-tab" onclick="switchDetailTab('perf', this)">성과 & 육성 </div>
+                            <div class="detail-tab" onclick="switchDetailTab('feedback', this)">피드백 전달</div>
+                        </div>
+                    </div>
+
+                    <div class="detail-scroll-wrapper">
+                        <div class="detail-content-area">
+                            <div class="detail-header">
+                                <button class="btn-back" onclick="showFeedback()">← 목록으로</button>
+                                <div style="font-size:20px; font-weight:700;">
+                                    <span id="detail-member-name"></span>
+                                </div>
+                            </div>
+
+                            <div id="dt-basic" class="detail-content active">
+                                <div class="grid-basic">
+                                    <div class="card profile-lg-box">
+                                        <div class="profile-lg-img" id="p-avatar"></div>
+                                        <div style="font-size:22px; font-weight:700;" id="p-name"></div>
+                                        <div style="color:#666; margin-bottom:12px;" id="p-job"></div>
+                                        <div id="p-keywords" style="display:flex; justify-content:center; gap:6px; flex-wrap:wrap;"></div>
+                                        <div id="p-info-list" style="margin-top:20px; text-align:left; border-top:1px solid #eee; padding-top:20px;"></div>
+                                    </div>
+                                    <div class="card">
+                                        <div class="card-head">전문 역량</div>
+                                        <div id="p-skills"></div>
+                                        <div class="swot-box" style="margin-top: 30px;">
+                                            <div class="swot-col">
+                                                <div class="swot-head" style="color:var(--color-magenta)">🔥 강점</div>
+                                                <div id="p-strengths"></div>
+                                            </div>
+                                            <div class="swot-col">
+                                                <div class="swot-head" style="color:var(--color-teal)">💡 보완점</div>
+                                                <div id="p-weaknesses"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="grid-half">
+                                    <div class="card growth-card-wrapper">
+                                        <div class="card-head">주요 경험</div>
+                                        <div id="growth-stages" class="growth-box-container"></div>
+                                        <div id="growth-desc" style="margin-top: 20px; color: #555; font-size: 14px; line-height: 1.6; text-align: center;"></div>
+                                        
+                                        <!-- File Viewer Area -->
+                                        <div id="file-list-mobile" class="file-list-mobile"></div>
+                                        <div class="file-donut-wrapper">
+                                            <div id="file-donut-menu" class="file-donut-menu"></div>
+                                            <button class="file-donut-toggle" id="btn-file-toggle">📂</button>
+                                        </div>
+                                    </div>
+                                    <div class="card">
+                                        <div class="card-head">커리어 이력</div>
+                                        <div id="p-history" style="padding-top:10px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="dt-perf" class="detail-content">
+                                <div class="eval-grade-card">
+                                    <div>
+                                        <div style="font-size:14px; opacity:0.8;">2025 종합 성과 등급</div>
+                                        <div class="grade-big" id="final-grade"></div>
+                                    </div>
+                                    <div class="grade-info-right">
+                                        <div class="grade-info-item">업무 목표 달성도 <strong id="sum-kpi" class="grade-info-score"></strong>점</div>
+                                        <div class="grade-info-item">핵심가치 준수도 <strong id="sum-cv" class="grade-info-score"></strong>점</div>
+                                    </div>
+                                </div>
+                                <div class="grid-half" style="margin-bottom: 40px;">
+                                    <div class="card">
+                                        <div class="card-head">업무 목표 달성도</div>
+                                        <div class="kpi-donut-wrapper">
+                                            <svg width="120" height="120">
+                                                <circle cx="60" cy="60" r="54" fill="none" stroke="#f0f0f0" stroke-width="12"></circle>
+                                                <circle id="kpi-donut" cx="60" cy="60" r="54" fill="none" stroke="var(--color-magenta)" stroke-width="12" stroke-linecap="round" stroke-dasharray="339" stroke-dashoffset="339" transform="rotate(-90 60 60)"></circle>
+                                            </svg>
+                                            <div class="kpi-text">
+                                                <div style="font-weight:700; font-size:24px; color:var(--color-magenta);" id="kpi-val"></div>
+                                                <div id="kpi-desc" style="font-size:13px; color:#666; margin-top:4px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card">
+                                        <div class="card-head">핵심가치 준수도</div>
+                                        <div id="cv-list"></div>
+                                    </div>
+                                </div>
+                                <div class="grid-career-growth">
+                                    <div class="card">
+                                        <div class="card-head">Career Path</div>
+                                        <div class="career-path-vertical">
+                                            <div class="cp-node" id="dev-current"></div>
+                                            <div class="cp-arrow-down">⬇</div>
+                                            <div class="cp-node future" id="dev-goal"></div>
+                                        </div>
+                                    </div>
+                                    <div class="card">
+                                        <div class="card-head">역량/경력 목표</div>
+                                        <ul class="goal-list" id="dev-comp-goals"></ul>
+                                    </div>
+                                    <div class="card">
+                                        <div class="card-head">비즈니스 기여 목표</div>
+                                        <ul class="goal-list" id="dev-biz-goals"></ul>
+                                    </div>
+                                </div>
+                                <div class="card" style="margin-top: 24px;">
+                                    <div class="card-head">역량 성장 로드맵 (Checklist)</div>
+                                    <div id="growth-roadmap-list" class="roadmap-list"></div>
+                                </div>
+                            </div>
+
+                            <div id="dt-feedback" class="detail-content">
+                                <div class="preference-card" id="feedback-preference-section">
+                                    <div class="pref-header">💡 피드백 가이드</div>
+                                    <div class="pref-grid">
+                                        <div class="pref-item" id="pref-directness"><div class="pref-icon" id="icon-directness"></div><span class="pref-label">화법</span><strong class="pref-val" id="val-directness"></strong><small class="pref-sub-desc" id="desc-directness"></small></div>
+                                        <div class="pref-item" id="pref-focus"><div class="pref-icon" id="icon-focus"></div><span class="pref-label">관점</span><strong class="pref-val" id="val-focus"></strong><small class="pref-sub-desc" id="desc-focus"></small></div>
+                                        <div class="pref-item" id="pref-tone"><div class="pref-icon" id="icon-tone"></div><span class="pref-label">어조</span><strong class="pref-val" id="val-tone"></strong><small class="pref-sub-desc" id="desc-tone"></small></div>
+                                    </div>
+                                    <div class="pref-guide-box">
+                                        <span>🤖</span> <span id="pref-guide-text">AI가 팀원의 성향을 고려하여 피드백 초안을 작성합니다.</span>
+                                    </div>
+                                </div>
+
+                                <div class="card">
+                                    <div class="card-head" style="color:var(--color-purple);">Step 1. 최초 피드백 입력</div>
+                                    <p class="fb-desc-sub">※ 키워드 별 최소 250자 이상 입력 해주세요.</p>
+                                    <div class="fb-input-grid">
+                                        <div class="fb-card-small">
+                                            <span class="fb-label" style="color:var(--color-magenta)">🔥 강점 (Strength)</span>
+                                            <textarea id="input-str" class="fb-textarea" placeholder="예: 꼼꼼함, 분석적 사고"></textarea>
+                                        </div>
+                                        <div class="fb-card-small">
+                                            <span class="fb-label" style="color:var(--color-teal)">💡 보완점 (Improvement)</span>
+                                            <textarea id="input-imp" class="fb-textarea" placeholder="예: 소통, 일정 관리"></textarea>
+                                        </div>
+                                        <div class="fb-card-small">
+                                            <span class="fb-label" style="color:var(--color-purple)">🌱 성장 (Growth)</span>
+                                            <textarea id="input-gro" class="fb-textarea" placeholder="예: 디지털 역량 강화, 대학원 진학, 직무 이동, 해외 파견 등"></textarea>
+                                        </div>
+                                    </div>
+                                    <div style="text-align:right;">
+                                        <button class="login-btn" style="width:auto; padding:12px 30px; margin:0;" id="btn-generate-evidence">✨ AI 행동 사례 찾기</button>
+                                    </div>
+                                </div>
+
+                                <div id="ai-evidence-section" class="evidence-container">
+                                    <div class="card-head" style="border:none; margin-bottom:10px;">Step 2. 피드백 구체화</div>
+                                    
+                                    <div class="evidence-grid">
+                                        <!-- Strength Options -->
+                                        <div class="evidence-box" id="ev-box-str-1">
+                                            <div class="ev-content-wrapper">
+                                                <div class="ev-title">🔥 강점 사례 (옵션 1)</div>
+                                                <div class="ev-text" id="ev-text-str-1">(위 버튼을 눌러 AI 추천 사례를 확인하세요)</div>
+                                            </div>
+                                            <div class="ev-controls">
+                                                <button class="btn-xs" id="btn-re-str-1" disabled>🔄 재탐색</button>
+                                                <button class="btn-xs btn-select" id="btn-sel-str-1" disabled>선택</button>
+                                            </div>
+                                        </div>
+                                        <div class="evidence-box" id="ev-box-str-2">
+                                            <div class="ev-content-wrapper">
+                                                <div class="ev-title">🔥 강점 사례 (옵션 2)</div>
+                                                <div class="ev-text" id="ev-text-str-2">(위 버튼을 눌러 AI 추천 사례를 확인하세요)</div>
+                                            </div>
+                                            <div class="ev-controls">
+                                                <button class="btn-xs" id="btn-re-str-2" disabled>🔄 재탐색</button>
+                                                <button class="btn-xs btn-select" id="btn-sel-str-2" disabled>선택</button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Improvement Options -->
+                                        <div class="evidence-box" id="ev-box-imp-1">
+                                            <div class="ev-content-wrapper">
+                                                <div class="ev-title">💡 보완점 사례 (옵션 1)</div>
+                                                <div class="ev-text" id="ev-text-imp-1">(위 버튼을 눌러 AI 추천 사례를 확인하세요)</div>
+                                            </div>
+                                            <div class="ev-controls">
+                                                <button class="btn-xs" id="btn-re-imp-1" disabled>🔄 재탐색</button>
+                                                <button class="btn-xs btn-select" id="btn-sel-imp-1" disabled>선택</button>
+                                            </div>
+                                        </div>
+                                        <div class="evidence-box" id="ev-box-imp-2">
+                                            <div class="ev-content-wrapper">
+                                                <div class="ev-title">💡 보완점 사례 (옵션 2)</div>
+                                                <div class="ev-text" id="ev-text-imp-2">(위 버튼을 눌러 AI 추천 사례를 확인하세요)</div>
+                                            </div>
+                                            <div class="ev-controls">
+                                                <button class="btn-xs" id="btn-re-imp-2" disabled>🔄 재탐색</button>
+                                                <button class="btn-xs btn-select" id="btn-sel-imp-2" disabled>선택</button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Growth Options -->
+                                        <div class="evidence-box" id="ev-box-gro-1">
+                                            <div class="ev-content-wrapper">
+                                                <div class="ev-title">🌱 성장 제언 (옵션 1)</div>
+                                                <div class="ev-text" id="ev-text-gro-1">(위 버튼을 눌러 AI 추천 사례를 확인하세요)</div>
+                                            </div>
+                                            <div class="ev-controls">
+                                                <button class="btn-xs" id="btn-re-gro-1" disabled>🔄 재탐색</button>
+                                                <button class="btn-xs btn-select" id="btn-sel-gro-1" disabled>선택</button>
+                                            </div>
+                                        </div>
+                                        <div class="evidence-box" id="ev-box-gro-2">
+                                            <div class="ev-content-wrapper">
+                                                <div class="ev-title">🌱 성장 제언 (옵션 2)</div>
+                                                <div class="ev-text" id="ev-text-gro-2">(위 버튼을 눌러 AI 추천 사례를 확인하세요)</div>
+                                            </div>
+                                            <div class="ev-controls">
+                                                <button class="btn-xs" id="btn-re-gro-2" disabled>🔄 재탐색</button>
+                                                <button class="btn-xs btn-select" id="btn-sel-gro-2" disabled>선택</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="text-align:center; margin-top:24px;">
+                                        <button id="btn-generate-feedback" class="login-btn" style="width:auto; padding:12px 40px;" disabled>
+                                            🧾 최종 피드백 생성
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="card">
+                                    <div class="card-head">Step 3. 최종 피드백</div>
+                                    <textarea id="final-feedback-text" class="final-msg-box" placeholder="상단의 '최종 피드백 생성' 버튼을 누르면 AI가 작성한 피드백이 여기에 표시됩니다."></textarea>
+                                    <div style="text-align:right; margin-top:20px;">
+                                        <button class="login-btn" style="width:auto; padding:12px 30px; margin:0;" onclick="alert('피드백이 전송되었습니다!')">📩 피드백 전송</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
         </div>
-        <div class="stepper">
-          <div class="step-indicator" data-step="1">
-            <div class="circle">1</div>
-            <span class="label">기본정보 · 업무 목표 달성도</span>
-          </div>
-          <div class="step-indicator" data-step="2">
-            <div class="circle">2</div>
-            <span class="label">핵심 가치 준수도(Core Values)</span>
-          </div>
-          <div class="step-indicator" data-step="3">
-            <div class="circle">3</div>
-            <span class="label">AI 결과 · 리더 최종 등급</span>
-          </div>
-        </div>
-      </section>
-
-      <main class="content">
-        <!-- STEP 1 -->
-        <section class="step-panel" data-step-panel="1">
-          <div class="panel">
-            <div class="section-title">
-              구성원 기본 정보
-            </div>
-
-            <div class="field" style="margin-bottom:6px;">
-              <label for="employeePreset">구성원 선택 (샘플)</label>
-              <select id="employeePreset">
-                <option value="">직접 입력</option>
-                <option value="박재현">박재현</option>
-                <option value="박태희">박태희</option>
-                <option value="박정호">박정호</option>
-                <option value="박재원">박재원</option>
-                <option value="하유림">하유림</option>
-              </select>
-              <span class="small-note">
-                목록에서 선택하면 이름/소속/직무/평가기간이 자동으로 채워지고, 구성원별로 다른 KPI 그래프와 핵심 가치 준수도 AI 예상 점수가 적용됩니다.
-              </span>
-            </div>
-
-            <div class="grid-2">
-              <div class="field">
-                <label for="employeeName">이름</label>
-                <input id="employeeName" type="text" placeholder="예: 박채현" />
-              </div>
-              <div class="field">
-                <label for="employeeTeam">소속 팀</label>
-                <input id="employeeTeam" type="text" placeholder="예: 리더십 개발팀" />
-              </div>
-              <div class="field">
-                <label for="employeeJob">직무 / 직급</label>
-                <input id="employeeJob" type="text" placeholder="예: 인사/선임" />
-              </div>
-              <div class="field">
-                <label for="periodName">평가 기간</label>
-                <input id="periodName" type="text" placeholder="예: 2025 상반기" />
-              </div>
-            </div>
-
-            <div class="field" style="margin-top:8px;">
-              <label>평가 유형</label>
-              <div class="radio-group">
-                <label>
-                  <input type="radio" name="evalType" value="mid" checked />
-                  중간평가 (1~6월 기준)
-                </label>
-                <label>
-                  <input type="radio" name="evalType" value="annual" />
-                  연말 평가 (1~12월 기준)
-                </label>
-              </div>
-            </div>
-
-            <div class="small-note">
-              ※ 이름/팀/직무/평가 기간·평가 유형을 입력한 뒤, 아래 <strong>[구성원 정보 확인 및 그래프 생성]</strong> 버튼을 눌러 월별 달성률 추이를 확인합니다.
-            </div>
-
-            <div style="margin-top:12px;">
-              <button class="btn btn-primary" id="generateChartBtn">
-                구성원 정보 확인 및 그래프 생성
-              </button>
-            </div>
-          </div>
-
-          <div class="panel">
-            <div class="section-title">
-              업무 목표 달성도 (KPI)
-              <span class="badge">자동 생성 · Context-Aware</span>
-            </div>
-
-            <div class="chart-card">
-              <div class="section-title" style="margin-bottom:4px;">
-                월별 달성률 추이 (실제 vs 이슈 고려 보정)
-              </div>
-              <div id="kpiPlaceholder" class="chart-placeholder">
-                구성원 기본 정보를 입력한 뒤<br/>
-                <strong>[구성원 정보 확인 및 그래프 생성]</strong> 버튼을 눌러 그래프를 확인하세요.
-              </div>
-              <canvas id="kpiChart" height="160" class="hidden"></canvas>
-              <div class="chart-legend">
-                <div>
-                  <span class="legend-dot"></span> 실제 달성률
-                </div>
-                <div>
-                  <span class="legend-dot gold"></span> 이슈 고려 보정 달성률
-                </div>
-                <div>
-                  <span class="legend-dot red"></span> 이슈 영향이 가장 컸던 달(변곡점)
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="nav-buttons" style="justify-content: flex-end;">
-            <button class="btn btn-primary" data-goto-step="2">
-              다음: 핵심 가치 준수도로 이동 →
-            </button>
-          </div>
-        </section>
-
-        <!-- STEP 2 -->
-        <section class="step-panel" data-step-panel="2">
-          <div class="panel">
-            <div class="section-title">
-              핵심 가치 준수도 (Core Values)
-              <span class="badge">Step 2</span>
-            </div>
-            <div class="small-note">
-              ※ 슬라이더로 리더 점수를 입력하면, AI 예상 점수와 차이가 클 때 각 항목 카드 안에 <strong>인라인 경고</strong>가 나타납니다.
-            </div>
-            <div class="core-values-grid" id="coreValuesGrid">
-              <div class="core-value-card"
-                data-core-name="Customer Focus"
-                data-ai-score="88">
-                <div class="core-value-header">
-                  <div>Customer Focus</div>
-                </div>
-                <div class="core-value-sub">
-                  고객 관점(Outside-in), 혁신 시도
-                </div>
-                <div class="score-row">
-                  <input type="range" min="0" max="100" value="50" />
-                  <span class="score-value">50</span>
-                  <span class="deviation-pill">편차 경고</span>
-                </div>
-                <div class="deviation-inline hidden">
-                  <div class="text"></div>
-                  <div class="buttons">
-                    <button class="btn-mini btn-mini-secondary btn-ignore">무시하고 진행</button>
-                    <button class="btn-mini btn-mini-primary btn-show-evidence">동료 평가 데이터 보기</button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="core-value-card"
-                data-core-name="Agility"
-                data-ai-score="82">
-                <div class="core-value-header">
-                  <div>Agility</div>
-                </div>
-                <div class="core-value-sub">
-                  변화 대응, 지속적인 학습
-                </div>
-                <div class="score-row">
-                  <input type="range" min="0" max="100" value="50" />
-                  <span class="score-value">50</span>
-                  <span class="deviation-pill">편차 경고</span>
-                </div>
-                <div class="deviation-inline hidden">
-                  <div class="text"></div>
-                  <div class="buttons">
-                    <button class="btn-mini btn-mini-secondary btn-ignore">무시하고 진행</button>
-                    <button class="btn-mini btn-mini-primary btn-show-evidence">동료 평가 데이터 보기</button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="core-value-card"
-                data-core-name="Collaboration"
-                data-ai-score="90">
-                <div class="core-value-header">
-                  <div>Collaboration</div>
-                </div>
-                <div class="core-value-sub">
-                  존중, One Company 마인드
-                </div>
-                <div class="score-row">
-                  <input type="range" min="0" max="100" value="50" />
-                  <span class="score-value">50</span>
-                  <span class="deviation-pill">편차 경고</span>
-                </div>
-                <div class="deviation-inline hidden">
-                  <div class="text"></div>
-                  <div class="buttons">
-                    <button class="btn-mini btn-mini-secondary btn-ignore">무시하고 진행</button>
-                    <button class="btn-mini btn-mini-primary btn-show-evidence">동료 평가 데이터 보기</button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="core-value-card"
-                data-core-name="Passion"
-                data-ai-score="78">
-                <div class="core-value-header">
-                  <div>Passion</div>
-                </div>
-                <div class="core-value-sub">
-                  도전, 성장 의지
-                </div>
-                <div class="score-row">
-                  <input type="range" min="0" max="100" value="50" />
-                  <span class="score-value">50</span>
-                  <span class="deviation-pill">편차 경고</span>
-                </div>
-                <div class="deviation-inline hidden">
-                  <div class="text"></div>
-                  <div class="buttons">
-                    <button class="btn-mini btn-mini-secondary btn-ignore">무시하고 진행</button>
-                    <button class="btn-mini btn-mini-primary btn-show-evidence">동료 평가 데이터 보기</button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="core-value-card"
-                data-core-name="Sustainability"
-                data-ai-score="85">
-                <div class="core-value-header">
-                  <div>Sustainability</div>
-                </div>
-                <div class="core-value-sub">
-                  안전, 책임, 지속가능
-                </div>
-                <div class="score-row">
-                  <input type="range" min="0" max="100" value="50" />
-                  <span class="score-value">50</span>
-                  <span class="deviation-pill">편차 경고</span>
-                </div>
-                <div class="deviation-inline hidden">
-                  <div class="text"></div>
-                  <div class="buttons">
-                    <button class="btn-mini btn-mini-secondary btn-ignore">무시하고 진행</button>
-                    <button class="btn-mini btn-mini-primary btn-show-evidence">동료 평가 데이터 보기</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="panel">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-              <div class="section-title" style="margin-bottom:0;">
-                리더 코멘트 (선택)
-              </div>
-              <button class="btn-mini btn-mini-primary" id="commentSuggestBtn">
-                AI 코멘트 추천 받기
-              </button>
-            </div>
-            <textarea
-              class="comment-area"
-              id="leaderComment"
-              placeholder="이번 평가에서 강조하고 싶은 점을 적어주세요. (예: 협업에서의 강점, 향후 성장 방향 등)"
-            ></textarea>
-          </div>
-
-          <div class="nav-buttons">
-            <button class="btn btn-secondary" data-goto-step="1">
-              ← 이전: 업무 목표 달성도 화면으로
-            </button>
-            <button class="btn btn-primary" data-goto-step="3">
-              다음: AI 결과 보기 →
-            </button>
-          </div>
-        </section>
-
-        <!-- STEP 3 -->
-        <section class="step-panel" data-step-panel="3">
-          <div class="panel">
-            <div class="section-title">
-              AI 기반 권장 등급 & 설명 (데모)
-              <span class="badge">Step 3</span>
-            </div>
-            <div class="ai-result-grade">
-              AI 권장 등급 (AI 기준): <span id="aiFinalGradeDisplay">-</span>
-            </div>
-            <div class="ai-result-subgrade">
-              리더 입력 점수 기준 계산 등급: <span id="leaderModelGradeDisplay">-</span>
-            </div>
-            <div id="aiExplanation" class="ai-explanation"></div>
-          </div>
-
-          <div class="panel">
-            <div class="section-title">
-              리더 최종 등급 확정
-            </div>
-            <div class="grade-row">
-              <div>
-                <label for="leaderFinalGrade">리더가 확정하는 최종 등급</label>
-              </div>
-              <select id="leaderFinalGrade">
-                <option value="S">S</option>
-                <option value="A" selected>A</option>
-                <option value="B">B</option>
-                <option value="C">C</option>
-                <option value="D">D</option>
-              </select>
-              <div id="gradeDeviationWarning" class="grade-warning hidden"></div>
-              <div class="small-note">
-                ※ 실제 서비스에서는 이 로그를 HR이 분석해
-                "AI 대비 어느 리더가 일관되게 <strong>관대하게</strong> 또는 <strong>냉정하게</strong> 평가하는지"를 파악하고,
-                리더의 평가 성향과 의사결정 과정 요약을 <strong>구성원에게 설명 형태로 전달</strong>합니다.
-              </div>
-            </div>
-          </div>
-
-          <div class="nav-buttons">
-            <button class="btn btn-secondary" data-goto-step="2">
-              ← 이전: 핵심 가치 준수도로 돌아가기
-            </button>
-            <button class="btn btn-primary" id="finishBtn">
-              (데모) 평가 완료
-            </button>
-          </div>
-        </section>
-      </main>
     </div>
-  </div>
 
-  <!-- 로딩 오버레이 -->
-  <div id="loadingOverlay" class="loading-backdrop hidden">
-    <div class="loading-card">
-      <p id="loadingMessage">AI가 데이터를 정리하는 중입니다...</p>
-      <div class="spinner"></div>
-    </div>
-  </div>
+    <script>
+        // [1] 데이터 및 변수 선언 (확장판)
 
-  <!-- 동료 평가 데이터 팝업 -->
-  <div id="peerModal" class="modal-backdrop hidden">
-    <div class="modal" role="dialog" aria-modal="true">
-      <div class="modal-header">
-        <div class="modal-title" id="peerModalTitle">동료 평가 데이터 확인</div>
-      </div>
-      <div class="modal-sub" id="peerModalSub">
-        동료 평가에서 추출된 관련 키워드입니다. 클릭하여 구체적인 예시를 확인해 보세요.
-      </div>
-      <div class="chip-row" id="peerTagRow"></div>
-      <div class="modal-body-box">
-        <div id="peerExampleText"></div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-mini btn-mini-secondary" id="peerModalFooterCloseBtn">닫기</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    let currentStep = 1;
-    const TOTAL_STEPS = 3;
-    const DEVIATION_THRESHOLD = 15;
-
-    /* 등급 스케일: D < C < B < A < S */
-    const GRADE_ORDER = ["D", "C", "B", "A", "S"];
-
-    let kpiChart = null;
-    let kpiLowestIndex = 0;
-    let isLoading = false;
-    window.currentAiGrade = "A";
-    window.leaderModelGrade = "A";
-
-    const PERSON_PROFILES = {
-      "박재현": {
-        raw12: [60, 55, 48, 52, 62, 70, 75, 80, 82, 84, 86, 88],
-        adj12: [65, 60, 63, 66, 70, 76, 80, 84, 86, 88, 90, 92],
-        issues: [
-          { monthIndex: 2, label: "내부: 신규 시스템 도입으로 초기 생산성 저하" },
-          { monthIndex: 3, label: "외부: 공급망 이슈로 납기 지연" }
-        ]
-      },
-      "박태희": {
-        raw12: [92, 90, 89, 91, 93, 95, 96, 95, 94, 96, 97, 98],
-        adj12: [92, 92, 92, 93, 95, 96, 97, 96, 95, 97, 98, 99],
-        issues: [
-          { monthIndex: 6, label: "외부: 환율 급등으로 영업이익 변동" }
-        ]
-      },
-      "박정호": {
-        raw12: [80, 75, 60, 55, 58, 62, 70, 78, 80, 82, 85, 86],
-        adj12: [82, 78, 68, 65, 66, 70, 76, 82, 84, 86, 88, 90],
-        issues: [
-          { monthIndex: 2, label: "내부: 경영진 사법 리스크로 신규 계약 승인 지연" },
-          { monthIndex: 3, label: "외부: 주요 고객사 구조조정으로 발주 축소" }
-        ]
-      },
-      "박재원": {
-        raw12: [45, 48, 50, 55, 60, 68, 72, 78, 82, 85, 88, 90],
-        adj12: [55, 58, 60, 65, 70, 76, 80, 84, 86, 89, 92, 94],
-        issues: [
-          { monthIndex: 0, label: "내부: 신규 전환 배치로 초기 적응 기간" },
-          { monthIndex: 1, label: "외부: 주요 설비 교체로 생산 일시 중단" }
-        ]
-      },
-      "하유림": {
-        raw12: [95, 92, 90, 88, 86, 84, 82, 80, 78, 79, 80, 82],
-        adj12: [96, 93, 92, 90, 88, 86, 84, 84, 83, 84, 85, 86],
-        issues: [
-          { monthIndex: 5, label: "내부: 조직 개편으로 역할 변경·조정" },
-          { monthIndex: 7, label: "외부: 시장 수요 감소로 목표 상향 조정" }
-        ]
-      },
-      "default": {
-        raw12: [92, 45, 55, 60, 70, 78, 82, 85, 88, 90, 92, 94],
-        adj12: [92, 70, 72, 75, 80, 84, 86, 88, 90, 92, 94, 96],
-        issues: [
-          { monthIndex: 1, label: "외부: 지진으로 공장 가동 중단" },
-          { monthIndex: 2, label: "내부: 경영진 사법 리스크로 신규 계약 승인 지연" }
-        ]
-      }
-    };
-
-    /* 핵심 가치 준수도 AI 예상 점수 */
-    const CORE_AI_PROFILES = {
-      "박재현": {
-        "Customer Focus": 88,
-        "Agility": 80,
-        "Collaboration": 92,
-        "Passion": 83,
-        "Sustainability": 85
-      },
-      "박태희": {
-        "Customer Focus": 90,
-        "Agility": 92,
-        "Collaboration": 88,
-        "Passion": 86,
-        "Sustainability": 89
-      },
-      "박정호": {
-        "Customer Focus": 78,
-        "Agility": 74,
-        "Collaboration": 82,
-        "Passion": 76,
-        "Sustainability": 80
-      },
-      "박재원": {
-        "Customer Focus": 72,
-        "Agility": 79,
-        "Collaboration": 75,
-        "Passion": 88,
-        "Sustainability": 77
-      },
-      "하유림": {
-        "Customer Focus": 85,
-        "Agility": 90,
-        "Collaboration": 87,
-        "Passion": 91,
-        "Sustainability": 88
-      },
-      "default": {
-        "Customer Focus": 88,
-        "Agility": 82,
-        "Collaboration": 90,
-        "Passion": 78,
-        "Sustainability": 85
-      }
-    };
-
-    const MONTH_LABELS_12 = [
-      "1월","2월","3월","4월","5월","6월",
-      "7월","8월","9월","10월","11월","12월"
-    ];
-
-    let currentMonths = MONTH_LABELS_12.slice(0, 6);
-    let currentRawSeries = PERSON_PROFILES.default.raw12.slice(0, 6);
-    let currentAdjSeries = PERSON_PROFILES.default.adj12.slice(0, 6);
-    let currentIssues = PERSON_PROFILES.default.issues.filter(i => i.monthIndex < 6);
-
-    const PEER_DATA = {
-      "Customer Focus": {
-        title: "Customer Focus",
-        tags: [
-          "#고객집중", "#니즈파악", "#VOC반영", "#서비스개선", "#재구매기여"
-        ],
-        examples: {
-          "#고객집중": "동료 평가에서, 해당 구성원은 고객 이슈 발생 시 가장 먼저 상황을 파악하고 대응 방안을 제시한 사례가 반복적으로 언급되었습니다.",
-          "#니즈파악": "신규 제품 런칭 전, 고객사의 숨은 니즈를 인터뷰를 통해 발굴하여 제안서 방향을 수정한 덕분에 수주로 이어졌다는 피드백이 있습니다.",
-          "#VOC반영": "월간 VOC 리포트에서 반복 지적된 불편사항을 취합하여 개선 태스크를 주도했다는 동료 의견이 다수입니다.",
-          "#서비스개선": "콜센터/AS팀과 협업해 응대 스크립트를 수정하고, 응답 리드타임을 단축시킨 사례가 공유되었습니다.",
-          "#재구매기여": "기존 고객사의 재계약 과정에서, 세밀한 사후관리와 이슈 관리 덕분에 타사 경쟁제안 대비 신뢰를 확보했다는 평가가 있습니다."
-        }
-      },
-      "Agility": {
-        title: "Agility",
-        tags: [
-          "#변화대응", "#실험정신", "#학습공유", "#의사결정속도", "#리스크관리"
-        ],
-        examples: {
-          "#변화대응": "시장 가격 변동에 맞춰 견적 구조를 재설계하고, 단기간에 새로운 가격 정책을 롤아웃한 사례가 있습니다.",
-          "#실험정신": "파일럿 프로젝트에서 실패 가능성이 높은 시도를 자발적으로 제안하고, 결과를 팀에 공유하며 다음 사이클에 반영했습니다.",
-          "#학습공유": "사내 러닝 세션을 열어 본인이 수강한 외부 교육 내용을 요약·공유했다는 동료 피드백이 있습니다.",
-          "#의사결정속도": "긴급 이슈 발생 시, 필요한 정보를 빠르게 모아 의사결정 옵션을 제시하여 리더의 판단 시간을 줄여주었다는 의견이 있습니다.",
-          "#리스크관리": "새로운 거래 구조 도입 시 예상 리스크를 사전에 정리해 법무·재무팀과 협의한 뒤 진행했다는 평가가 나옵니다."
-        }
-      },
-      "Collaboration": {
-        title: "Collaboration",
-        tags: [
-          "#협업", "#커뮤니케이션", "#관계형성", "#상호존중", "#조직문화적합도"
-        ],
-        examples: {
-          "#협업": "“OO님은 팀 프로젝트에서 협업을 통해 동료와 함께 문제를 해결하며 목표를 달성했습니다.”라는 문장이 여러 동료 평가에 반복 등장합니다.",
-          "#커뮤니케이션": "타 팀과의 미팅에서 이해하기 어려운 기술 내용을 쉽게 번역해 주어 의사결정을 도왔다는 피드백이 있습니다.",
-          "#관계형성": "신규 입사자 온보딩 시 비공식 멘토 역할을 맡아, 조직 적응을 돕는 과정이 긍정적으로 평가됩니다.",
-          "#상호존중": "의견이 다른 상황에서도 상대방의 관점을 먼저 요약해 준 뒤 본인의 의견을 제시해, 회의 분위기를 부드럽게 만들었다는 의견이 있습니다.",
-          "#조직문화적합도": "사내 행사와 사소한 업무에서도 주도적으로 참여하며 ‘함께 일하기 편한 동료’라는 표현이 자주 등장합니다."
-        }
-      },
-      "Passion": {
-        title: "Passion",
-        tags: [
-          "#주도성", "#도전적인목표", "#피드백수용", "#자기계발", "#기여의지"
-        ],
-        examples: {
-          "#주도성": "담당 범위를 넘어서는 영역도 스스로 개선안을 찾아 제안했다는 동료 평가가 있습니다.",
-          "#도전적인목표": "분기 OKR 수립 시 스스로 높은 수준의 KPI를 설정하고, 실패 가능성도 감수하겠다고 선언한 사례가 언급됩니다.",
-          "#피드백수용": "피드백을 방어적으로 받아들이지 않고, 다음 스프린트 계획에 바로 반영했다는 의견이 반복적으로 나오고 있습니다.",
-          "#자기계발": "업무 후 온라인 강의를 수강하고, 학습 내용을 팀 위키에 정리해 공유하는 모습이 긍정적으로 평가됩니다.",
-          "#기여의지": "“팀에 도움이 된다면 야근보다는 프로세스 개선을 먼저 고민하는 동료”라는 표현이 등장합니다."
-        }
-      },
-      "Sustainability": {
-        title: "Sustainability",
-        tags: [
-          "#안전의식", "#컴플라이언스", "#장기관점", "#리스크사전공유", "#ESG기여"
-        ],
-        examples: {
-          "#안전의식": "현장 방문 시 안전수칙을 준수하지 않는 사례를 발견하고, 바로 리포트하여 재발 방지 교육을 이끌었다는 평가가 있습니다.",
-          "#컴플라이언스": "규정상 애매한 거래 구조에 대해 ‘일단 진행’보다 관련 부서와의 사전 확인을 우선했다는 동료 의견이 있습니다.",
-          "#장기관점": "단기 매출보다 고객과의 신뢰를 우선하며, 장기 파트너십을 고려한 제안을 준비했다는 평가가 있습니다.",
-          "#리스크사전공유": "프로젝트 리스크를 초기에 정리하여 팀과 공유하고, 대응 계획을 함께 수립했다는 피드백이 있습니다.",
-          "#ESG기여": "환경·안전 관련 사내 캠페인에 자발적으로 참여하고, 팀원들을 독려한 사례가 보고됩니다."
-        }
-      }
-    };
-
-    document.addEventListener("DOMContentLoaded", () => {
-      setupSteps();
-      setupPresetSelect();
-      setupCoreValueInputs();
-      setupLeaderGradeSelect();
-      setupFinishButton();
-      setupChartGenerateButton();
-      setupPeerModal();
-      setupCommentSuggestButton();
-
-      setCoreValueAiScoresFor("");
-      resetCoreValueSlidersTo50();
-    });
-
-    function setupSteps() {
-      const buttons = document.querySelectorAll("[data-goto-step]");
-      buttons.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const step = parseInt(btn.getAttribute("data-goto-step"), 10);
-          if (!isNaN(step)) {
-            goToStepWithLoading(step);
-          }
-        });
-      });
-      showStep(1);
-    }
-
-    function goToStepWithLoading(step) {
-      if (step === currentStep || isLoading) return;
-      const overlay = document.getElementById("loadingOverlay");
-      const msg = document.getElementById("loadingMessage");
-      if (msg) msg.textContent = "AI가 데이터를 정리하는 중입니다...";
-      if (!overlay) {
-        showStep(step);
-        return;
-      }
-      isLoading = true;
-      overlay.classList.remove("hidden");
-      setTimeout(() => {
-        showStep(step);
-        overlay.classList.add("hidden");
-        isLoading = false;
-      }, 1000);
-    }
-
-    function updateStepperFill() {
-      const fill = document.getElementById("stepperFill");
-      if (!fill) return;
-      const ratio = (currentStep - 1) / (TOTAL_STEPS - 1);
-      fill.style.width = `${ratio * 100}%`;
-    }
-
-    function showStep(step) {
-      currentStep = step;
-      const panels = document.querySelectorAll(".step-panel");
-      panels.forEach((panel) => {
-        const panelStep = parseInt(panel.getAttribute("data-step-panel"), 10);
-        panel.classList.toggle("active", panelStep === step);
-      });
-
-      const indicators = document.querySelectorAll(".step-indicator");
-      indicators.forEach((ind) => {
-        const s = parseInt(ind.getAttribute("data-step"), 10);
-        ind.classList.remove("active", "completed");
-        if (s === step) ind.classList.add("active");
-        else if (s < step) ind.classList.add("completed");
-      });
-
-      updateStepperFill();
-      if (step === 3) computeAiResult();
-    }
-
-    function setupPresetSelect() {
-      const preset = document.getElementById("employeePreset");
-      if (!preset) return;
-      preset.addEventListener("change", () => {
-        const nameInput = document.getElementById("employeeName");
-        const teamInput = document.getElementById("employeeTeam");
-        const jobInput = document.getElementById("employeeJob");
-        const periodInput = document.getElementById("periodName");
-
-        const name = preset.value;
-        if (!name) {
-          if (nameInput) nameInput.value = "";
-          if (teamInput) teamInput.value = "";
-          if (jobInput) jobInput.value = "";
-          if (periodInput) periodInput.value = "";
-          return;
-        }
-
-        const grades = ["사원", "선임", "책임"];
-        const randomGrade = grades[Math.floor(Math.random() * grades.length)];
-
-        /* 모든 구성원 평가기간: 2025 상반기 */
-        const mapping = {
-          "박재현": { team: "리더십 개발팀", period: "2025 상반기" },
-          "박태희": { team: "리더십 개발팀", period: "2025 상반기" },
-          "박정호": { team: "리더십 개발팀", period: "2025 상반기" },
-          "박재원": { team: "리더십 개발팀", period: "2025 상반기" },
-          "하유림": { team: "리더십 개발팀", period: "2025 상반기" }
-        };
-        const baseInfo = mapping[name] || { team: "리더십 개발팀", period: "2025 상반기" };
-
-        if (nameInput) nameInput.value = name;
-        if (teamInput) teamInput.value = baseInfo.team;
-        if (jobInput) jobInput.value = `인사/${randomGrade}`;
-        if (periodInput) periodInput.value = baseInfo.period;
-
-        setCoreValueAiScoresFor(name);
-        resetCoreValueSlidersTo50();
-      });
-    }
-
-    function setupChartGenerateButton() {
-      const btn = document.getElementById("generateChartBtn");
-      const placeholder = document.getElementById("kpiPlaceholder");
-      const canvas = document.getElementById("kpiChart");
-      if (!btn || !placeholder || !canvas) return;
-
-      btn.addEventListener("click", () => {
-        const name = document.getElementById("employeeName").value.trim();
-        const team = document.getElementById("employeeTeam").value.trim();
-        const job = document.getElementById("employeeJob").value.trim();
-        const period = document.getElementById("periodName").value.trim();
-        if (!name || !team || !job || !period) {
-          alert("구성원 기본 정보를 모두 입력해 주세요.");
-          return;
-        }
-
-        const evalTypeInput = document.querySelector('input[name="evalType"]:checked');
-        const evalType = evalTypeInput ? evalTypeInput.value : "mid";
-        const monthsCount = evalType === "annual" ? 12 : 6;
-
-        const profile = PERSON_PROFILES[name] || PERSON_PROFILES.default;
-
-        currentMonths = MONTH_LABELS_12.slice(0, monthsCount);
-        currentRawSeries = profile.raw12.slice(0, monthsCount);
-        currentAdjSeries = profile.adj12.slice(0, monthsCount);
-        currentIssues = profile.issues.filter(i => i.monthIndex < monthsCount);
-
-        setCoreValueAiScoresFor(name);
-
-        placeholder.classList.add("hidden");
-        canvas.classList.remove("hidden");
-        renderKpiChart();
-      });
-    }
-
-    function renderKpiChart() {
-      const canvas = document.getElementById("kpiChart");
-      if (!canvas || typeof Chart === "undefined") return;
-      const ctx = canvas.getContext("2d");
-
-      let minVal = currentRawSeries[0];
-      kpiLowestIndex = 0;
-      for (let i = 1; i < currentRawSeries.length; i++) {
-        if (currentRawSeries[i] < minVal) {
-          minVal = currentRawSeries[i];
-          kpiLowestIndex = i;
-        }
-      }
-
-      const pointColors = currentRawSeries.map((_, idx) =>
-        idx === kpiLowestIndex ? "#D7177B" : "#6b6b6b"
-      );
-      const baseColor = "#6b6b6b";
-
-      if (kpiChart) {
-        kpiChart.data.labels = currentMonths;
-        kpiChart.data.datasets[0].data = currentRawSeries;
-        kpiChart.data.datasets[0].pointBackgroundColor = pointColors;
-        kpiChart.data.datasets[1].data = currentAdjSeries;
-        kpiChart.update();
-        return;
-      }
-
-      kpiChart = new Chart(ctx, {
-        type: "line",
-        data: {
-          labels: currentMonths,
-          datasets: [
-            {
-              label: "실제 달성률(%)",
-              data: currentRawSeries,
-              tension: 0.35,
-              borderWidth: 2,
-              pointRadius: 4,
-              pointHoverRadius: 5,
-              borderColor: baseColor,
-              segment: {
-                borderColor: (ctxSeg) => {
-                  const i0 = ctxSeg.p0DataIndex;
-                  const i1 = ctxSeg.p1DataIndex;
-                  if (i0 === kpiLowestIndex || i1 === kpiLowestIndex) return "#D7177B";
-                  return baseColor;
-                },
-                borderWidth: (ctxSeg) => {
-                  const i0 = ctxSeg.p0DataIndex;
-                  const i1 = ctxSeg.p1DataIndex;
-                  return (i0 === kpiLowestIndex || i1 === kpiLowestIndex) ? 3 : 2;
-                }
-              },
-              pointBackgroundColor: pointColors,
-            },
-            {
-              label: "이슈 고려 보정 달성률(%)",
-              data: currentAdjSeries,
-              tension: 0.35,
-              borderWidth: 2,
-              pointRadius: 3,
-              pointHoverRadius: 4,
-              borderColor: "#70C0E6",
-              borderDash: [4, 2],
-              pointBackgroundColor: "#70C0E6",
-            },
+        var FEEDBACK_LIBRARY = {
+          "keywordGroups": [
+            { "groupName": "소통 및 커뮤니케이션", "tags": ["소통", "대화", "공유", "연락", "피드백", "경청", "설득", "보고", "미팅", "협업"] },
+            { "groupName": "업무 디테일 및 품질", "tags": ["꼼꼼", "디테일", "세심", "정확", "검토", "오류", "품질", "완결성", "테스트", "확인"] },
+            { "groupName": "속도 및 납기 준수", "tags": ["속도", "신속", "빠른", "기한", "납기", "일정", "데드라인", "타임라인", "효율", "민첩"] },
+            { "groupName": "문제 해결 및 분석", "tags": ["분석", "데이터", "논리", "인사이트", "원인", "대안", "해결", "통찰", "구조화", "본질"] },
+            { "groupName": "책임감 및 오너십", "tags": ["책임", "오너십", "주도", "마무리", "완수", "성실", "솔선수범", "헌신", "끝까지"] },
+            { "groupName": "기술 역량 및 전문성", "tags": ["기술", "전문", "지식", "코드", "툴", "학습", "최신", "숙련도", "노하우", "테크"] },
+            { "groupName": "업무 태도 및 자세", "tags": ["태도", "긍정", "열정", "적극", "유연", "수용", "성장", "마인드", "동기부여"] },
+            { "groupName": "문서화 및 정보 정리", "tags": ["문서", "정리", "기록", "리포트", "보고서", "매뉴얼", "가이드", "위키", "히스토리"] },
+            { "groupName": "시장/트렌드 이해", "tags": ["트렌드", "시장", "시장 변화", "시장 동향", "업계 동향", "산업 동향", "경쟁사", "벤치마킹", "고객 니즈", "고객 변화"] },
+            { "groupName": "발표/스토리텔링", "tags": ["발표", "프레젠테이션", "설명", "스토리텔링", "자료 구성", "전달력"] },
+            { "groupName": "실행력 및 추진력", "tags": ["추진", "실행", "돌파", "전개", "리드", "달성"] },
+            { "groupName": "리더십 및 코칭", "tags": ["리더십", "코칭", "멘토링", "동기부여", "위임", "육성", "피드백 제공", "솔직함"] },
+            { "groupName": "고객 중심 사고", "tags": ["고객", "사용자", "CX", "VOC", "니즈", "경험", "페르소나"] },
+            { "groupName": "기획력 및 전략", "tags": ["기획", "전략", "큰 그림", "방향성", "로드맵", "설계", "구상"] },
+            { "groupName": "일반", "tags": ["일반", "보편", "기본"] }
           ],
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: function (context) {
-                  const monthIdx = context.dataIndex;
-                  const value = context.parsed.y;
-                  const issue = currentIssues.find(i => i.monthIndex === monthIdx);
-                  if (context.datasetIndex === 1) {
-                    const rawVal = currentRawSeries[monthIdx];
-                    const adjVal = currentAdjSeries[monthIdx];
-                    const lines = [
-                      `이슈 고려 보정 달성률: ${adjVal.toFixed(1)}%`,
-                      `실제: ${rawVal.toFixed(1)}% → 보정: ${adjVal.toFixed(1)}%`,
+          "behavioralSamples": [
+            // 1. 소통 및 커뮤니케이션
+            { "groupName": "소통 및 커뮤니케이션", "type": "strength", "tags": ["소통", "공유"], "text": "복잡한 프로젝트 이슈를 팀원들이 이해하기 쉬운 언어로 정리하여 신속하게 공유함으로써 혼선을 줄였습니다." },
+            { "groupName": "소통 및 커뮤니케이션", "type": "strength", "tags": ["경청"], "text": "회의 시간 동안 동료의 의견을 끝까지 경청하고 핵심을 요약해주며 논의가 긍정적인 방향으로 흐르도록 도왔습니다." },
+            { "groupName": "소통 및 커뮤니케이션", "type": "strength", "tags": ["설득"], "text": "유관 부서와의 미팅에서 상충되는 의견을 조율하고 합리적인 대안을 제시하여 원만한 합의를 이끌어냈습니다." },
+            { "groupName": "소통 및 커뮤니케이션", "type": "strength", "tags": ["보고"], "text": "상위 리더에게 보고 시 핵심 내용을 두괄식으로 명확히 전달하여 신속한 의사결정을 도왔습니다." },
+            { "groupName": "소통 및 커뮤니케이션", "type": "improvement", "tags": ["소통"], "text": "이슈 발생 시 혼자 해결하려다 공유 시점이 늦어지는 경우가 있어 초기 단계에서의 신속한 공유가 필요합니다." },
+            { "groupName": "소통 및 커뮤니케이션", "type": "improvement", "tags": ["보고"], "text": "구두로 논의된 내용을 문서나 메일로 한 번 더 정리해서 남겨둔다면 업무 이력을 관리하는 데 도움이 될 것입니다." },
+            { "groupName": "소통 및 커뮤니케이션", "type": "improvement", "tags": ["피드백"], "text": "동료의 피드백을 방어적으로 받아들이는 경향이 있어, 열린 마음으로 의견을 수용하는 태도가 필요합니다." },
+            
+            // 2. 업무 디테일 및 품질
+            { "groupName": "업무 디테일 및 품질", "type": "strength", "tags": ["꼼꼼"], "text": "산출물 제출 전 다각도로 검토를 수행하여 사소한 오류까지 사전에 발견하고 수정했습니다." },
+            { "groupName": "업무 디테일 및 품질", "type": "strength", "tags": ["정확"], "text": "데이터 정합성을 꼼꼼히 체크하여 신뢰도 높은 분석 결과를 제공함으로써 의사결정에 기여했습니다." },
+            { "groupName": "업무 디테일 및 품질", "type": "strength", "tags": ["품질"], "text": "기능 구현뿐만 아니라 예외 처리까지 세심하게 고려하여 서비스 안정성을 높였습니다." },
+            { "groupName": "업무 디테일 및 품질", "type": "improvement", "tags": ["꼼꼼"], "text": "전체적인 방향성은 좋으나 최종 단계에서 오타나 포맷 오류 등을 한 번 더 확인하는 습관이 필요합니다." },
+            { "groupName": "업무 디테일 및 품질", "type": "improvement", "tags": ["디테일"], "text": "세부 사항을 챙기는 것도 중요하지만 때로는 과도한 디테일 확인으로 인해 전체 속도가 늦어지지 않도록 주의가 필요합니다." },
+            { "groupName": "업무 디테일 및 품질", "type": "improvement", "tags": ["검토"], "text": "자신의 산출물을 동료에게 크로스 체크 요청하는 과정을 통해 객관적인 품질을 확보하면 좋겠습니다." },
+
+            // 3. 속도 및 납기 준수
+            { "groupName": "속도 및 납기 준수", "type": "strength", "tags": ["속도"], "text": "타이트한 일정 속에서도 우선순위를 명확히 하여 약속된 기한 내에 업무를 완수했습니다." },
+            { "groupName": "속도 및 납기 준수", "type": "strength", "tags": ["효율"], "text": "불필요한 프로세스를 단축하고 핵심 업무에 집중하여 프로젝트 진행 속도를 높였습니다." },
+            { "groupName": "속도 및 납기 준수", "type": "strength", "tags": ["민첩"], "text": "갑작스러운 업무 변경 요청에도 유연하고 신속하게 대응하여 업무 공백을 최소화했습니다." },
+            { "groupName": "속도 및 납기 준수", "type": "improvement", "tags": ["일정"], "text": "빠른 진행도 중요하지만 중간 진행 상황을 동료들에게 주기적으로 공유하여 보조를 맞추는 것이 필요합니다." },
+            { "groupName": "속도 및 납기 준수", "type": "improvement", "tags": ["데드라인"], "text": "마감 기한이 임박해서 업무를 처리하기보다, 미리 일정을 계획하여 여유 있게 마무리하는 습관을 들이면 좋겠습니다." },
+
+            // 4. 문제 해결 및 분석
+            { "groupName": "문제 해결 및 분석", "type": "strength", "tags": ["분석", "데이터"], "text": "직관에 의존하기보다 객관적인 데이터와 지표를 근거로 문제의 원인을 분석하여 설득력을 높였습니다." },
+            { "groupName": "문제 해결 및 분석", "type": "strength", "tags": ["해결"], "text": "발생 가능한 리스크를 미리 예측하고 실질적인 해결책을 제시하여 프로젝트 안정성에 기여했습니다." },
+            { "groupName": "문제 해결 및 분석", "type": "strength", "tags": ["통찰"], "text": "현상 이면에 숨겨진 근본 원인을 꿰뚫어 보는 통찰력을 발휘하여 문제 해결의 실마리를 제공했습니다." },
+            { "groupName": "문제 해결 및 분석", "type": "improvement", "tags": ["인사이트"], "text": "현황 파악에 그치지 않고, 그 데이터가 비즈니스에 어떤 의미를 갖는지 인사이트를 도출하는 연습이 필요합니다." },
+            { "groupName": "문제 해결 및 분석", "type": "improvement", "tags": ["구조화"], "text": "문제의 원인을 직관적으로 판단하기보다, 로직 트리를 활용해 구조적으로 접근하는 방식을 연습하면 좋겠습니다." },
+
+            // 5. 책임감 및 오너십
+            { "groupName": "책임감 및 오너십", "type": "strength", "tags": ["책임"], "text": "맡은 업무는 어떤 어려움이 있어도 끝까지 완수해내는 강한 책임감을 보여주어 동료들에게 신뢰를 주었습니다." },
+            { "groupName": "책임감 및 오너십", "type": "strength", "tags": ["솔선수범"], "text": "팀 내 R&R이 모호한 업무가 발생했을 때 먼저 나서서 처리하는 솔선수범의 자세를 보여주었습니다." },
+            { "groupName": "책임감 및 오너십", "type": "improvement", "tags": ["위임"], "text": "모든 일을 혼자 감당하려 하기보다 적절한 시점에 동료에게 도움을 요청하거나 업무를 위임하는 유연함이 필요합니다." },
+            { "groupName": "책임감 및 오너십", "type": "improvement", "tags": ["공유"], "text": "책임감이 강한 것은 좋으나, 진행 중인 어려움이나 이슈를 너무 늦게 공유하여 대응 시기를 놓치지 않도록 주의해야 합니다." },
+
+            // 6. 기술 역량 및 전문성
+            { "groupName": "기술 역량 및 전문성", "type": "strength", "tags": ["학습"], "text": "새로운 기술이나 툴을 두려움 없이 빠르게 학습하고 실무에 적용하여 업무 효율을 높였습니다." },
+            { "groupName": "기술 역량 및 전문성", "type": "strength", "tags": ["트렌드"], "text": "최신 기술 트렌드에 대한 관심이 높고, 이를 팀 내에 전파하여 기술적 성장을 자극하는 역할을 했습니다." },
+            { "groupName": "기술 역량 및 전문성", "type": "strength", "tags": ["전문"], "text": "담당 분야에 대한 깊이 있는 지식을 바탕으로 동료들의 기술적 문제를 해결해 주는 해결사 역할을 했습니다." },
+            { "groupName": "기술 역량 및 전문성", "type": "improvement", "tags": ["문서화"], "text": "개인의 기술적 노하우가 암묵지로 남지 않도록 체계적인 문서화를 통해 팀의 자산으로 남겨주면 좋겠습니다." },
+            { "groupName": "기술 역량 및 전문성", "type": "improvement", "tags": ["깊이"], "text": "다양한 기술을 얕게 아는 것보다, 현재 사용하는 핵심 기술에 대한 깊이 있는 이해를 다지는 시간이 필요합니다." },
+
+            // 7. 업무 태도 및 자세
+            { "groupName": "업무 태도 및 자세", "type": "strength", "tags": ["긍정"], "text": "어려운 상황에서도 긍정적인 마인드를 유지하며 팀 분위기를 밝게 이끄는 에너지가 있습니다." },
+            { "groupName": "업무 태도 및 자세", "type": "strength", "tags": ["수용"], "text": "변화하는 업무 환경이나 새로운 지시에 대해 유연하게 수용하고 빠르게 적응하는 모습을 보여주었습니다." },
+            { "groupName": "업무 태도 및 자세", "type": "improvement", "tags": ["소극"], "text": "회의나 업무 논의 시 조금 더 적극적으로 자신의 의견을 개진한다면 팀에 더 큰 기여가 될 것입니다." },
+            { "groupName": "업무 태도 및 자세", "type": "improvement", "tags": ["감정"], "text": "업무 스트레스가 발생했을 때 감정이 태도로 드러나지 않도록 마인드 컨트롤하는 노력이 필요합니다." },
+
+            // 8. 문서화 및 정보 정리
+            { "groupName": "문서화 및 정보 정리", "type": "strength", "tags": ["정리"], "text": "히스토리를 모르는 사람이 봐도 이해할 수 있을 만큼 업무 문서를 체계적이고 논리적으로 정리했습니다." },
+            { "groupName": "문서화 및 정보 정리", "type": "strength", "tags": ["기록"], "text": "회의록 및 업무 진행 사항을 꼼꼼하게 기록하여 정보 누락을 방지하고 팀 내 공유를 원활하게 했습니다." },
+            { "groupName": "문서화 및 정보 정리", "type": "improvement", "tags": ["문서"], "text": "문서 작성 시 내용의 충실함도 중요하지만, 핵심 내용을 한눈에 파악할 수 있도록 요약과 구조화에 신경 쓰면 좋겠습니다." },
+
+            // 9. 시장/트렌드 이해
+            { "groupName": "시장/트렌드 이해", "type": "strength", "tags": ["트렌드"], "text": "급변하는 시장 트렌드를 빠르게 파악하고 이를 업무에 접목하여 경쟁력 있는 기획안을 도출했습니다." },
+            { "groupName": "시장/트렌드 이해", "type": "strength", "tags": ["벤치마킹"], "text": "경쟁사의 동향을 심도 있게 분석하고 우리 조직에 적용할 수 있는 시사점을 명확히 제시했습니다." },
+            { "groupName": "시장/트렌드 이해", "type": "improvement", "tags": ["시야"], "text": "내부 업무에 집중하다 보니 외부 시장의 변화나 최신 트렌드를 파악하는 데 다소 소홀한 부분이 있어 보완이 필요합니다." },
+
+            // 10. 발표/스토리텔링
+            { "groupName": "발표/스토리텔링", "type": "strength", "tags": ["발표", "설명"], "text": "복잡한 기술적 내용을 비전문가도 이해하기 쉽게 비유를 들어 설명하여 청중의 이해도를 높였습니다." },
+            { "groupName": "발표/스토리텔링", "type": "strength", "tags": ["전달력"], "text": "발표 자료의 흐름이 논리적이고, 핵심 메시지를 명확하게 전달하여 청중을 효과적으로 설득했습니다." },
+            { "groupName": "발표/스토리텔링", "type": "improvement", "tags": ["자료"], "text": "발표 자료에 텍스트가 다소 많아 가독성이 떨어지므로, 도식이나 그래프를 활용해 핵심 메시지를 시각화하면 좋겠습니다." },
+            { "groupName": "발표/스토리텔링", "type": "improvement", "tags": ["눈높이"], "text": "청중의 배경지식을 고려하지 않고 전문 용어를 많이 사용하는 경향이 있어, 듣는 사람 수준에 맞춘 설명이 필요합니다." },
+
+            // 11. 실행력 및 추진력
+            { "groupName": "실행력 및 추진력", "type": "strength", "tags": ["추진", "돌파"], "text": "예상치 못한 장애물에도 굴하지 않고 끈기 있게 돌파하여 목표를 달성하는 강력한 추진력을 보여주었습니다." },
+            { "groupName": "실행력 및 추진력", "type": "strength", "tags": ["리드"], "text": "불확실한 상황에서도 주도적으로 의사결정을 내리고 팀을 리딩하여 프로젝트를 성공적으로 완수했습니다." },
+            { "groupName": "실행력 및 추진력", "type": "improvement", "tags": ["속도"], "text": "추진력은 좋으나, 너무 앞서 나가는 경향이 있어 팀원들과 보폭을 맞추는 노력이 필요합니다." },
+            { "groupName": "실행력 및 추진력", "type": "improvement", "tags": ["계획"], "text": "실행에 옮기기 전 계획 단계를 조금 더 꼼꼼히 점검한다면 시행착오를 줄일 수 있을 것입니다." },
+
+            // 12. 리더십 및 코칭 (NEW)
+            { "groupName": "리더십 및 코칭", "type": "strength", "tags": ["동기부여"], "text": "팀원 개개인의 강점을 파악하고 적절한 칭찬과 격려를 통해 업무 의욕을 고취시켰습니다." },
+            { "groupName": "리더십 및 코칭", "type": "strength", "tags": ["위임"], "text": "팀원을 믿고 과감하게 권한을 위임하여 팀원들이 주도적으로 성장할 수 있는 환경을 조성했습니다." },
+            { "groupName": "리더십 및 코칭", "type": "improvement", "tags": ["코칭"], "text": "지시형 리더십보다는 질문을 통해 팀원 스스로 답을 찾을 수 있도록 돕는 코칭형 리더십을 연습해보면 좋겠습니다." },
+            { "groupName": "리더십 및 코칭", "type": "improvement", "tags": ["피드백"], "text": "쓴소리를 하는 것을 어려워하여 개선이 필요한 부분에 대해 모호하게 전달하는 경향이 있어, 솔직하고 건설적인 피드백이 필요합니다." },
+
+            // 13. 고객 중심 사고 (NEW)
+            { "groupName": "고객 중심 사고", "type": "strength", "tags": ["사용자", "VOC"], "text": "항상 사용자의 관점에서 서비스를 바라보고, 고객의 불편함(Pain Point)을 해결하기 위한 아이디어를 적극적으로 제안했습니다." },
+            { "groupName": "고객 중심 사고", "type": "strength", "tags": ["니즈"], "text": "고객 데이터를 심층적으로 분석하여 숨겨진 니즈를 발굴하고 이를 제품 개선에 반영했습니다." },
+            { "groupName": "고객 중심 사고", "type": "improvement", "tags": ["고객"], "text": "공급자 관점에서 기획하는 경향이 있어, 실제 고객의 목소리(VOC)를 더 자주 청취하고 반영하려는 노력이 필요합니다." },
+
+            // 14. 기획력 및 전략 (NEW)
+            { "groupName": "기획력 및 전략", "type": "strength", "tags": ["기획", "큰 그림"], "text": "단기적인 성과뿐만 아니라 중장기적인 비즈니스 로드맵을 고려하여 탄탄한 기획안을 수립했습니다." },
+            { "groupName": "기획력 및 전략", "type": "strength", "tags": ["전략"], "text": "복잡한 비즈니스 요구사항을 구조화하여 명확한 전략 방향을 제시함으로써 이해관계자들을 설득했습니다." },
+            { "groupName": "기획력 및 전략", "type": "improvement", "tags": ["기획"], "text": "아이디어는 좋으나 구체적인 실행 계획(Action Plan)이 다소 부족하여, 실현 가능성을 고려한 기획 보완이 필요합니다." },
+
+            // 15. 일반
+            { "groupName": "일반", "type": "strength", "tags": ["일반"], "text": "항상 성실한 태도로 업무에 임하며 팀의 목표 달성을 위해 헌신적으로 노력했습니다." },
+            { "groupName": "일반", "type": "strength", "tags": ["일반"], "text": "동료들과 원만한 관계를 유지하며 긍정적인 팀 분위기를 조성하는 데 기여했습니다." },
+            { "groupName": "일반", "type": "improvement", "tags": ["일반"], "text": "업무 효율성을 높이기 위해 현재의 업무 방식을 점검하고 개선할 부분을 찾아보면 좋겠습니다." },
+            { "groupName": "일반", "type": "improvement", "tags": ["일반"], "text": "주기적인 중간 보고를 통해 업무 방향성을 리더와 상의하며 진행하면 더욱 좋은 성과가 기대됩니다." }
+          ]
+        };
+
+        var KEYWORD_MAP = {
+            '소통': ['소통', '대화', '말투', '연락', '공유', '커뮤니케이션', '미팅', '회의', '협업', '설득', '경청'],
+            '꼼꼼': ['꼼꼼', '디테일', '세심', '정확', '실수', '검토', '확인', '완벽', '오류', '품질', '완결성'],
+            '속도': ['속도', '빠른', '신속', '납기', '기한', '일정', '데드라인', '타임라인', '민첩', '효율'],
+            '분석': ['분석', '데이터', '논리', '인사이트', '파악', '원인', '통찰', '본질', '근거', '수치', '구조화'],
+            '책임': ['책임', '성실', '주도', '마무리', '오너십', '완수', '헌신', '솔선수범'],
+            '기술': ['기술', '전문', '지식', '코드', '툴', '학습', '역량', '테크', '숙련도'],
+            '태도': ['태도', '적극', '긍정', '열정', '마인드', '자세', '유연', '수용', '동기부여'],
+            '문서': ['문서', '정리', '기록', '리포트', '보고서', '위키', '매뉴얼', '히스토리'],
+            '트렌드': ['트렌드', '시장', '동향', '흐름', '유행', '최신', '벤치마킹', '경쟁사', '고객', '니즈'],
+            '발표': ['발표', '프레젠테이션', '설명', '스토리텔링', '자료', '전달력'],
+            '글로벌': ['해외', '글로벌', '영어', '외국어', '파견', '주재원', '어학', '출장', '유학'],
+            '추진': ['추진', '실행', '돌파', '전개', '주도', '리드', '달성'],
+            '리더십': ['리더십', '코칭', '멘토링', '위임', '육성', '동기부여', '매니징'],
+            '기획': ['기획', '전략', '로드맵', '설계', '큰 그림', '방향성'],
+            '고객': ['고객', '사용자', 'CX', 'VOC', '니즈', '경험', '페르소나']
+        };
+
+        var KEY_TO_GROUP = {
+            '소통': '소통 및 커뮤니케이션',
+            '꼼꼼': '업무 디테일 및 품질',
+            '속도': '속도 및 납기 준수',
+            '분석': '문제 해결 및 분석',
+            '책임': '책임감 및 오너십',
+            '기술': '기술 역량 및 전문성',
+            '태도': '업무 태도 및 자세',
+            '문서': '문서화 및 정보 정리',
+            '트렌드': '시장/트렌드 이해',
+            '발표': '발표/스토리텔링',
+            '글로벌': '일반',
+            '추진': '실행력 및 추진력',
+            '리더십': '리더십 및 코칭',
+            '기획': '기획력 및 전략',
+            '고객': '고객 중심 사고'
+        };
+
+        // [성장 제언을 위한 프로그램 라이브러리 확장]
+        var PROGRAM_SUGGESTIONS = {
+          researcher: [
+              "R&D Academy 심화 과정", 
+              "Top-tier 학회 논문 작성 워크숍", 
+              "사내 논문 리뷰 세션(월 1회)",
+              "글로벌 기술 트렌드 리포트 작성 TF",
+              "특허 출원 전략 세미나"
+          ],
+          data_ai: [
+              "CDS(Citizen Data Scientist) 실무 활용 교육", 
+              "AI·데이터 아카데미 심화반", 
+              "머신러닝 엔지니어링 부트캠프",
+              "최신 생성형 AI 프롬프트 엔지니어링 과정",
+              "Kaggle 대회 참여 지원 프로그램"
+          ],
+          leader_pm: [
+              "리더십 파이프라인 아카데미", 
+              "PM·Agile Bootcamp", 
+              "조직장 핵심역량 과정 (소통/피드백)",
+              "전략적 사고 및 의사결정 워크숍",
+              "비즈니스 파이낸스(재무) 기초 과정"
+          ],
+          ux_product: [
+              "UX Design Lab 스터디", 
+              "사용자 리서치 실전 워크숍", 
+              "디자인 시스템 운영 랩",
+              "HCI(Human Computer Interaction) 세미나",
+              "서비스 기획 및 데이터 분석 통합 과정"
+          ]
+        };
+
+        var styleMap = {
+            '직설적': { icon: '🎯', desc: '핵심부터 명확하게 전달하는 것을 선호합니다.' },
+            '완곡함': { icon: '🧸', desc: '먼저 공감과 격려를 들을 때 심리적 안정감을 느끼는 스타일입니다.' },
+            '과업 중심': { icon: '📊', desc: '구체적인 성과와 데이터 위주의 피드백을 선호합니다.' },
+            '관계 중심': { icon: '🤝', desc: '팀워크와 태도에 대한 인정을 중요하게 생각합니다.' },
+            '논리적': { icon: '⚖️', desc: '인과관계와 근거가 명확한 설명을 선호합니다.' },
+            '부드러움': { icon: '🌿', desc: '강압적이지 않고 제안하는 투의 어조를 선호합니다.' }
+        };
+
+        var teamDB = {
+             '박태희': {
+                job: 'Data Scientist', rank: '선임', avatar: '👩🏻‍💻', years: '5년 3개월',
+                keywords: ['#데이터분석', '#통계', '#논리적'],
+                feedbackStyle: { directness: '직설적', focus: '과업 중심', tone: '논리적' },
+                skills: [ { name: 'Python', per: 90, color: '#D7177B' }, { name: 'ML', per: 75, color: '#551D83' } ],
+                strengths: ['데이터 인사이트 도출', '새로운 툴 학습 빠름', '통계적 분석 능력'], weaknesses: ['발표 스킬 부족', '멀티태스킹 어려움', '일정 관리'],
+                growthStages: [
+                    { label: "초기 (Onboarding)", desc: "생산 데이터 구조 파악 및 기초 분석 환경 세팅" },
+                    { label: "중기 (Developing)", desc: "분석 모델링 기초 확립 및 소규모 과제 수행" },
+                    { label: "현재 (Performing)", desc: "MLOps 파이프라인 리딩 및 데이터 기반 의사결정 지원" }
+                ],
+                growthDesc: "데이터 분석 역량이 급격히 상승하며, 팀 내 핵심 분석가로 자리잡고 있습니다.",
+                history: [
+                    { date:'23.01', title:'DX팀 합류', desc:'데이터 분석 리드' },
+                    { date:'22.06', title:'사내 데이터 경진대회 우승', desc:'생산성 예측 모델' },
+                    { date:'21.05', title:'데이터 분석가 과정 수료', desc:'사내 전문가 과정' },
+                    { date:'20.03', title:'생산 공정 데이터 수집', desc:'초기 셋업 프로젝트 참여' },
+                    { date:'19.01', title:'입사', desc:'생산기술팀' }
+                ],
+                kpiTotal: 92, kpiDesc: "데이터 파이프라인 구축 완료 (120% 달성)",
+                coreValues: [ {n:'Customer', s:95}, {n:'Sustainability', s:85}, {n:'Agility', s:90}, {n:'Passion', s:92}, {n:'Collaboration', s:80} ],
+                currRole: 'Data Scientist', goalRole: 'Data Tech Lead', 
+                compGoals: ['MLOps 파이프라인 구축 마스터', 'AWS 머신러닝 전문 자격 취득', '기술 블로그 월 1회 연재'],
+                bizGoals: ['생산 공정 수율 2% 개선 모델 개발', '데이터 분석 자동화로 리드타임 30% 단축'],
+                projectLog: { succ: "데이터 파이프라인 최적화로 처리 속도 200% 개선", imp: "현업 부서와의 초기 요구사항 조율 미흡" },
+                growthRoadmap: [
+                    { task: "SQL 고급 쿼리 마스터하기", checked: false },
+                    { task: "데이터 시각화 대시보드 구축 프로젝트 리딩", checked: true },
+                    { task: "머신러닝 기초 스터디 수료", checked: false }
+                ],
+                files: [
+                    { id: "perf2023", label: "2023 성과평가서", url: "#", icon: "📊" },
+                    { id: "plan2024", label: "2024 목표설정안", url: "#", icon: "🗂️" },
+                    { id: "edu_cert", label: "데이터 분석가 수료증", url: "#", icon: "🎓" },
+                    { id: "proj_a", label: "A 프로젝트 결과보고서", url: "#", icon: "📈" },
+                    { id: "peer_review", label: "동료 피드백 모음", url: "#", icon: "💬" },
+                    { id: "interview", label: "심층 면담 기록", url: "#", icon: "📝" }
+                ]
+            },
+            '박재원': {
+                job: 'Software Eng.', rank: '사원', avatar: '👩🏻‍💻', years: '3년',
+                keywords: ['#개발', '#클라우드', '#성실'],
+                feedbackStyle: { directness: '직설적', focus: '과업 중심', tone: '부드러움' },
+                skills: [ { name: 'React', per: 75, color: '#551D83' }, { name: 'AWS', per: 60, color: '#70C0E6' } ],
+                strengths: ['빠른 프로토타이핑', '성실한 태도', '문제 해결 능력'], weaknesses: ['아키텍처 설계', '코드 리뷰 참여', '문서화'],
+                growthStages: [
+                    { label: "초기 (Onboarding)", desc: "레거시 코드 파악 및 단순 버그 수정" },
+                    { label: "중기 (Developing)", desc: "신규 기능 모듈 단위 개발 및 배포" },
+                    { label: "현재 (Performing)", desc: "MSA 아키텍처 설계 참여 및 클라우드 운영" }
+                ],
+                growthDesc: "입사 초기 적응기를 거쳐, 최근 기술 습득 속도가 빨라지며 가파른 성장 곡선을 그리고 있습니다.",
+                history: [
+                    { date:'23.04', title:'백엔드 리드 역할 수행', desc:'API 서버 구조 개선' },
+                    { date:'22.08', title:'클라우드 마이그레이션 참여', desc:'IDC to AWS' },
+                    { date:'21.02', title:'입사', desc:'플랫폼 개발' }
+                ],
+                kpiTotal: 85, kpiDesc: "신규 기능 3종 배포 완료",
+                coreValues: [ {n:'Customer', s:85}, {n:'Sustainability', s:80}, {n:'Agility', s:85}, {n:'Passion', s:90}, {n:'Collaboration', s:88} ],
+                currRole: 'Software Eng.', goalRole: 'Architect', 
+                compGoals: ['Kubernetes 운영 마스터', 'MSA 아키텍처 설계 경험 축적', '오픈소스 프로젝트 기여'],
+                bizGoals: ['시스템 가용성 99.99% 유지', '레거시 시스템 클라우드 전환 가속화'],
+                projectLog: { succ: "사용자 요청 기능 2주내 배포", imp: "테스트 코드 커버리지 부족" },
+                growthRoadmap: [
+                    { task: "Kubernetes 클러스터 운영 경험 공유", checked: false },
+                    { task: "사내 해커톤 참가", checked: true },
+                    { task: "오픈소스 기여 1건 이상", checked: false }
+                ],
+                files: [
+                    { id: "hackathon", label: "해커톤 수상 내역", url: "#", icon: "🏆" },
+                    { id: "perf2023", label: "2023 성과평가서", url: "#", icon: "📊" },
+                    { id: "aws_saa", label: "AWS SAA 자격증", url: "#", icon: "☁️" },
+                    { id: "git_stats", label: "Github 커밋 통계", url: "#", icon: "🐙" },
+                    { id: "tech_blog", label: "기술 블로그 포스팅", url: "#", icon: "✍️" },
+                    { id: "code_review", label: "코드 리뷰 모음", url: "#", icon: "💻" }
+                ]
+            },
+             '박재현': {
+                job: 'AI Researcher', rank: '책임', avatar: '👨🏻‍🔬', years: '8년 1개월',
+                keywords: ['#AI', '#딥러닝', '#혁신'],
+                feedbackStyle: { directness: '완곡함', focus: '과업 중심', tone: '논리적' },
+                skills: [ { name: 'Deep Learning', per: 95, color: '#551D83' }, { name: 'CV', per: 80, color: '#D7177B' } ],
+                strengths: ['최신 논문 구현 능력', '알고리즘 최적화', '딥러닝 아키텍처 설계'], weaknesses: ['비즈니스 적용 관점', '문서화 습관', '타 부서 소통'],
+                growthStages: [
+                    { label: "초기 (Onboarding)", desc: "기존 비전 검사 알고리즘 분석 및 이해" },
+                    { label: "중기 (Developing)", desc: "독자 모델 프로토타이핑 및 성능 검증" },
+                    { label: "현재 (Performing)", desc: "SOTA급 성능 달성 및 엣지 디바이스 최적화" }
+                ],
+                growthDesc: "딥러닝 기술 전문성을 바탕으로 꾸준한 우상향 성장세를 유지하며 연구 성과를 주도하고 있습니다.",
+                history: [
+                    { date:'22.01', title:'선행연구팀', desc:'비전 검사' },
+                    { date:'20.11', title:'비전 검사 솔루션 개발', desc:'핵심 알고리즘 설계' },
+                    { date:'18.07', title:'딥러닝 연구 파트장', desc:'이미지 인식 고도화' },
+                    { date:'16.03', title:'입사 (R&D 센터)', desc:'영상처리 연구' }
+                ],
+                kpiTotal: 88, kpiDesc: "특허 2건 출원, 학회 발표",
+                coreValues: [ {n:'Customer', s:80}, {n:'Sustainability', s:75}, {n:'Agility', s:95}, {n:'Passion', s:90}, {n:'Collaboration', s:70} ],
+                currRole: 'AI Researcher', goalRole: 'Principal Researcher', 
+                compGoals: ['Top Tier 학회 논문 게재', '글로벌 연구 네트워크 확장', '최신 생성형 AI 모델 파인튜닝'],
+                bizGoals: ['비전 검사 정확도 99.9% 달성으로 불량률 감소', 'AI 모델 경량화로 엣지 디바이스 탑재'],
+                projectLog: { succ: "비전 검사 정확도 99.5% 달성", imp: "현장 엔지니어 피드백 반영 지연" },
+                growthRoadmap: [
+                    { task: "최신 논문 리뷰 세미나 발표 (분기 1회)", checked: true },
+                    { task: "TensorFlow 자격증 취득", checked: false },
+                    { task: "코드 리팩토링 가이드 작성", checked: false }
+                ],
+                files: [
+                    { id: "patent_doc", label: "출원 특허 명세서", url: "#", icon: "📑" },
+                    { id: "paper_2023", label: "CVPR 제출 논문", url: "#", icon: "📝" },
+                    { id: "perf2023", label: "2023 성과평가서", url: "#", icon: "📊" },
+                    { id: "feedback", label: "동료 피드백 요약", url: "#", icon: "💬" },
+                    { id: "tech_spec", label: "기술 사양서 v2.0", url: "#", icon: "📄" },
+                    { id: "lab_notes", label: "실험 노트 아카이브", url: "#", icon: "📔" }
+                ]
+            },
+            '박정호': {
+                job: 'Project Manager', rank: '책임', avatar: '👨🏻‍💼', years: '12년',
+                keywords: ['#PM', '#리더십', '#소통'],
+                feedbackStyle: { directness: '완곡함', focus: '관계 중심', tone: '부드러움' },
+                skills: [ { name: 'PM', per: 92, color: '#008785' }, { name: 'Communication', per: 88, color: '#551D83' } ],
+                strengths: ['강력한 추진력', '이해관계자 조율', '리스크 관리'], weaknesses: ['최신 기술 트렌드 이해', '실무 툴 활용', '데이터 분석'],
+                growthStages: [
+                    { label: "초기 (Onboarding)", desc: "프로젝트 지원 및 일정 관리 기초" },
+                    { label: "중기 (Developing)", desc: "소규모 과제 PM 수행 및 이해관계자 관리" },
+                    { label: "현재 (Performing)", desc: "전사 스마트팩토리 구축 총괄 및 리스크 관리" }
+                ],
+                growthDesc: "프로젝트 관리 및 리더십 역량이 안정기에 접어들며, 조직 내 신뢰도가 매우 높습니다.",
+                history: [
+                    { date:'20.01', title:'DX PM', desc:'스마트팩토리' },
+                    { date:'18.09', title:'스마트팩토리 TFT 리드', desc:'전사 확산 전략 수립' },
+                    { date:'15.06', title:'전략기획팀 이동', desc:'중장기 전략 수립' },
+                    { date:'12.02', title:'입사 (경영지원)', desc:'관리 회계' }
+                ],
+                kpiTotal: 95, kpiDesc: "프로젝트 납기 100% 준수",
+                coreValues: [ {n:'Customer', s:90}, {n:'Sustainability', s:85}, {n:'Agility', s:88}, {n:'Passion', s:92}, {n:'Collaboration', s:98} ],
+                currRole: 'Project Manager', goalRole: 'Center Leader', 
+                compGoals: ['PMP 자격증 갱신 및 최신 트렌드 학습', '애자일 코칭 전문가 과정 수료', 'DX 비즈니스 전략 수립 역량 강화'],
+                bizGoals: ['스마트팩토리 구축 프로젝트 성공적 런칭', '프로젝트 예산 절감 10% 달성'],
+                projectLog: { succ: "스마트팩토리 예산 15% 절감", imp: "초기 기술 검토 단계 리스크 관리" },
+                growthRoadmap: [
+                    { task: "애자일 코치 자격증 준비", checked: true },
+                    { task: "타 부서와의 분기별 얼라인먼트 미팅 주재", checked: true },
+                    { task: "리스크 관리 매뉴얼 업데이트", checked: false }
+                ],
+                files: [
+                    { id: "pmp_cert", label: "PMP 자격증", url: "#", icon: "🎖️" },
+                    { id: "perf2022", label: "2022 성과평가서", url: "#", icon: "📊" },
+                    { id: "perf2023", label: "2023 성과평가서", url: "#", icon: "📊" },
+                    { id: "risk_manual", label: "리스크 관리 매뉴얼", url: "#", icon: "📘" },
+                    { id: "wbs_master", label: "전사 프로젝트 WBS", url: "#", icon: "📅" },
+                    { id: "agile_guide", label: "애자일 가이드북", url: "#", icon: "🏃" }
+                ]
+            },
+            '하유림': {
+                job: 'UX Designer', rank: '선임', avatar: '👩🏻‍🎨', years: '4년',
+                keywords: ['#UX', '#디자인', '#공감'],
+                feedbackStyle: { directness: '완곡함', focus: '관계 중심', tone: '부드러움' },
+                skills: [ { name: 'UI Design', per: 88, color: '#D7177B' }, { name: 'Figma', per: 90, color: '#551D83' } ],
+                strengths: ['사용자 중심 사고', '창의적 디자인', '트렌드 캐치'], weaknesses: ['데이터 기반 설득', '개발 용어 이해', '일정 준수'],
+                growthStages: [
+                    { label: "초기 (Onboarding)", desc: "기존 서비스 UI 유지보수 및 가이드 준수" },
+                    { label: "중기 (Developing)", desc: "신규 서비스 UX 기획 및 프로토타이핑" },
+                    { label: "현재 (Performing)", desc: "전사 디자인 시스템 고도화 리딩" }
+                ],
+                growthDesc: "디자인 시스템 구축 경험을 통해 UX 전문성을 크게 확대하며 영향력을 넓히고 있습니다.",
+                history: [
+                    { date:'23.05', title:'사내 디자인 어워드 수상', desc:'사용자 친화적 UI/UX' },
+                    { date:'22.09', title:'디자인 시스템 구축 TF', desc:'공통 컴포넌트 표준화' },
+                    { date:'21.03', title:'모바일 앱 개편 디자인', desc:'사용성 개선 프로젝트' },
+                    { date:'19.11', title:'입사', desc:'디자인센터' }
+                ],
+                kpiTotal: 90, kpiDesc: "디자인 시스템 1.0 배포",
+                coreValues: [ {n:'Customer', s:98}, {n:'Sustainability', s:80}, {n:'Agility', s:85}, {n:'Passion', s:90}, {n:'Collaboration', s:92} ],
+                currRole: 'UX Designer', goalRole: 'Product Designer', 
+                compGoals: ['UX Writing 가이드라인 수립', '데이터 시각화 디자인 역량 강화', '사용자 리서치 방법론 마스터'],
+                bizGoals: ['서비스 사용자 이탈률 5% 감소', '디자인-개발 핸드오프 효율화'],
+                projectLog: { succ: "개발-디자인 협업 효율 30% 증가", imp: "로그 데이터 기반 근거 부족" },
+                growthRoadmap: [
+                    { task: "디자인 시스템 컴포넌트 고도화", checked: true },
+                    { task: "사용자 리서치 방법론 A/B 테스트 적용", checked: false },
+                    { task: "프론트엔드 기초 이해 (HTML/CSS)", checked: true }
+                ],
+                files: [
+                    { id: "award", label: "디자인 어워드 상장", url: "#", icon: "🏅" },
+                    { id: "portfolio", label: "프로젝트 포트폴리오", url: "#", icon: "🎨" },
+                    { id: "perf2023", label: "2023 성과평가서", url: "#", icon: "📊" },
+                    { id: "ux_research", label: "사용자 조사 결과", url: "#", icon: "🔍" },
+                    { id: "design_sys", label: "디자인 시스템 가이드", url: "#", icon: "📏" },
+                    { id: "workshop", label: "워크숍 결과물", url: "#", icon: "💡" }
+                ]
+            }
+        };
+
+        var currentMember = null;
+        var selectedEvidence = { 
+            str1: '', str2: '', 
+            imp1: '', imp2: '', 
+            gro1: '', gro2: '' 
+        };
+
+        // --- Functions ---
+
+        // Initialize Event Listeners after DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Attach event listeners
+            var loginBtn = document.getElementById('btn-login-action');
+            if(loginBtn) loginBtn.addEventListener('click', checkLogin);
+            
+            // [NEW] 엔터키 로그인 기능 추가
+            var loginIdInput = document.getElementById('login-id');
+            var loginPwInput = document.getElementById('login-pw');
+
+            function handleEnterKey(e) {
+                if(e.key === 'Enter') {
+                    checkLogin();
+                }
+            }
+
+            if(loginIdInput) loginIdInput.addEventListener('keyup', handleEnterKey);
+            if(loginPwInput) loginPwInput.addEventListener('keyup', handleEnterKey);
+
+
+            var homeBtn = document.getElementById('btn-home-action');
+            if(homeBtn) homeBtn.addEventListener('click', showDashboard);
+
+            // [NEW] 상단 팀원 검색 기능 추가
+            var searchInput = document.getElementById('top-search-input');
+            if(searchInput) {
+                searchInput.addEventListener('keyup', function(e) {
+                    if (e.key === 'Enter') {
+                        var query = this.value.trim();
+                        if (!query) return;
+
+                        if (teamDB.hasOwnProperty(query)) {
+                            // 1. 피드백 뷰 활성화 (사이드바 및 레이아웃 초기화)
+                            showFeedback();
+                            // 2. 해당 멤버 상세 정보 로드 (기본정보 탭으로 이동됨)
+                            showFeedbackDetail(query);
+                            // 3. 입력창 초기화 (선택사항)
+                            this.value = '';
+                        } else {
+                            alert("해당 팀원을 찾을 수 없습니다.");
+                        }
+                    }
+                });
+            }
+
+            var logoutBtn = document.getElementById('btn-logout-action');
+            if(logoutBtn) logoutBtn.addEventListener('click', logout);
+
+            var menuEval = document.getElementById('menu-eval');
+            if(menuEval) menuEval.addEventListener('click', showEval);
+
+            var menuFeedback = document.getElementById('menu-feedback');
+            if(menuFeedback) menuFeedback.addEventListener('click', showFeedback);
+
+            var btnGenEv = document.getElementById('btn-generate-evidence');
+            if(btnGenEv) btnGenEv.addEventListener('click', generateEvidence);
+            
+            var btnReStr1 = document.getElementById('btn-re-str-1');
+            if(btnReStr1) btnReStr1.addEventListener('click', function(){ reexplore('str', 1) });
+            var btnSelStr1 = document.getElementById('btn-sel-str-1');
+            if(btnSelStr1) btnSelStr1.addEventListener('click', function(){ toggleSelection('str', 1) });
+
+            var btnReStr2 = document.getElementById('btn-re-str-2');
+            if(btnReStr2) btnReStr2.addEventListener('click', function(){ reexplore('str', 2) });
+            var btnSelStr2 = document.getElementById('btn-sel-str-2');
+            if(btnSelStr2) btnSelStr2.addEventListener('click', function(){ toggleSelection('str', 2) });
+
+            var btnReImp1 = document.getElementById('btn-re-imp-1');
+            if(btnReImp1) btnReImp1.addEventListener('click', function(){ reexplore('imp', 1) });
+            var btnSelImp1 = document.getElementById('btn-sel-imp-1');
+            if(btnSelImp1) btnSelImp1.addEventListener('click', function(){ toggleSelection('imp', 1) });
+
+            var btnReImp2 = document.getElementById('btn-re-imp-2');
+            if(btnReImp2) btnReImp2.addEventListener('click', function(){ reexplore('imp', 2) });
+            var btnSelImp2 = document.getElementById('btn-sel-imp-2');
+            if(btnSelImp2) btnSelImp2.addEventListener('click', function(){ toggleSelection('imp', 2) });
+
+            var btnReGro1 = document.getElementById('btn-re-gro-1');
+            if(btnReGro1) btnReGro1.addEventListener('click', function(){ reexplore('gro', 1) });
+            var btnSelGro1 = document.getElementById('btn-sel-gro-1');
+            if(btnSelGro1) btnSelGro1.addEventListener('click', function(){ toggleSelection('gro', 1) });
+
+            var btnReGro2 = document.getElementById('btn-re-gro-2');
+            if(btnReGro2) btnReGro2.addEventListener('click', function(){ reexplore('gro', 2) });
+            var btnSelGro2 = document.getElementById('btn-sel-gro-2');
+            if(btnSelGro2) btnSelGro2.addEventListener('click', function(){ toggleSelection('gro', 2) });
+
+            var btnGenFinal = document.getElementById('btn-generate-feedback');
+            if(btnGenFinal) btnGenFinal.addEventListener('click', handleGenerateFinalFeedback);
+            
+            var fileToggle = document.getElementById('btn-file-toggle');
+            if(fileToggle) fileToggle.addEventListener('click', toggleFileDonut);
+        });
+
+
+        function checkLogin() {
+            var id = document.getElementById('login-id').value;
+            var pw = document.getElementById('login-pw').value;
+            if(id === 'HEROSB' && pw === 'LGCHEM') {
+                document.getElementById('login-page').style.display = 'none';
+                document.getElementById('main-app').style.display = 'flex';
+                showDashboard();
+            } else {
+                alert('ID: HEROSB, PW: LGCHEM 입니다.');
+            }
+        }
+
+        function logout() {
+            document.getElementById('main-app').style.display = 'none';
+            document.getElementById('login-page').style.display = 'flex';
+            document.getElementById('login-id').value = '';
+            document.getElementById('login-pw').value = '';
+            hideAllViews();
+        }
+
+        function hideAllViews() {
+            var views = document.querySelectorAll('.view-section');
+            for(var i=0; i<views.length; i++) views[i].classList.remove('active');
+            var details = document.querySelectorAll('.detail-container');
+            for(var i=0; i<details.length; i++) details[i].classList.remove('active');
+            var menus = document.querySelectorAll('.menu-item');
+            for(var i=0; i<menus.length; i++) menus[i].classList.remove('active');
+            var sidebar = document.getElementById('member-list-sidebar');
+            if(sidebar) sidebar.style.display = 'none';
+        }
+
+        function showDashboard() { 
+            hideAllViews(); 
+            var dash = document.getElementById('view-dashboard');
+            if(dash) dash.classList.add('active');
+            document.querySelector('.content-container').scrollTop = 0;
+        }
+
+        // iframe이 로드되었는지 확인하는 플래그 변수
+        var isEvalLoaded = false; 
+
+        function showEval() { 
+            hideAllViews(); 
+            var evalView = document.getElementById('view-evaluation');
+            var menuEval = document.getElementById('menu-eval');
+            
+            if(evalView) evalView.classList.add('active'); 
+            if(menuEval) menuEval.classList.add('active');
+            
+            // [최적화] 메뉴를 클릭했을 때 iframe 로딩 시작 (지연 로딩)
+            if (!isEvalLoaded) {
+                var iframe = document.getElementById('chemibration-frame');
+                if (iframe && iframe.dataset.src) {
+                    iframe.src = iframe.dataset.src; // data-src의 주소를 실제 src로 옮김
+                    isEvalLoaded = true; // 로딩 됨 표시
+                }
+            }
+
+            var scrollWrap = evalView.querySelector('.detail-scroll-wrapper');
+            if(scrollWrap) scrollWrap.scrollTop = 0;
+        }
+
+        function showFeedback() {
+            resetFeedbackState();
+            hideAllViews();
+            var menuFeedback = document.getElementById('menu-feedback');
+            var sidebarList = document.getElementById('member-list-sidebar');
+            var listView = document.getElementById('view-feedback-list');
+
+            if(menuFeedback) menuFeedback.classList.add('active');
+            if(sidebarList) sidebarList.style.display = 'block';
+            if(listView) listView.classList.add('active');
+            
+            renderMemberList(); 
+            renderMembers();    
+        }
+
+        // [수정 1] 팀원 정렬 순서 정의
+        var MEMBER_ORDER = ['박태희', '박재현', '박정호', '박재원', '하유림'];
+
+        function renderMemberList() {
+            var container = document.getElementById('member-list-sidebar');
+            container.innerHTML = '';
+            
+            // Object.keys 대신 정해진 순서 배열(MEMBER_ORDER)을 순회
+            MEMBER_ORDER.forEach(function(name) {
+                if (teamDB[name]) {
+                    var m = teamDB[name];
+                    var li = document.createElement('li');
+                    li.className = 'member-list-item';
+                    li.id = 'ml-' + name; 
+                    li.onclick = function() { showFeedbackDetail(name); };
+                    li.innerHTML = '<span class="ml-avatar">'+m.avatar+'</span><span>'+name+'</span>';
+                    container.appendChild(li);
+                }
+            });
+        }
+        
+        function renderMembers() {
+            var container = document.getElementById('member-card-container');
+            container.innerHTML = '';
+            
+            // Object.keys 대신 정해진 순서 배열(MEMBER_ORDER)을 순회
+            MEMBER_ORDER.forEach(function(name) {
+                if (teamDB[name]) {
+                    var m = teamDB[name];
+                    var card = document.createElement('div');
+                    card.className = 'member-card';
+                    card.onclick = function() { showFeedbackDetail(name); };
+                    var tags = m.keywords.map(function(k){ return '<span class="mc-tag">'+k+'</span>'; }).join('');
+                    card.innerHTML = '<div class="mc-avatar">'+m.avatar+'</div><div class="mc-name">'+name+'</div><div class="mc-role">'+m.job+' | '+m.years+'</div><div class="mc-tags">'+tags+'</div>';
+                    container.appendChild(card);
+                }
+            });
+        }
+
+        function switchEvalTab(el) {
+            if (!el) return;
+            var tabs = el.parentElement.querySelectorAll('.detail-tab');
+            for(var i=0; i<tabs.length; i++) tabs[i].classList.remove('active');
+            el.classList.add('active');
+        }
+
+        function switchDetailTab(tabName, el) {
+            if (!el) return;
+            var tabs = el.parentElement ? el.parentElement.querySelectorAll('.detail-tab') : document.querySelectorAll('.detail-tab');
+            for(var i=0; i<tabs.length; i++) tabs[i].classList.remove('active');
+            el.classList.add('active');
+            var contents = document.querySelectorAll('.detail-content');
+            for(var i=0; i<contents.length; i++) contents[i].classList.remove('active');
+            var content = document.getElementById('dt-' + tabName);
+            if (content) content.classList.add('active');
+        }
+
+        function showFeedbackDetail(name) {
+            resetFeedbackState();
+            currentMember = teamDB[name];
+            
+            var views = document.querySelectorAll('.view-section');
+            for(var i=0; i<views.length; i++) views[i].classList.remove('active');
+            var details = document.querySelectorAll('.detail-container');
+            for(var i=0; i<details.length; i++) details[i].classList.remove('active');
+            var detailView = document.getElementById('view-feedback-detail');
+            detailView.classList.add('active');
+
+            var items = document.querySelectorAll('.member-list-item');
+            for(var i=0; i<items.length; i++) items[i].classList.remove('active');
+            var li = document.getElementById('ml-' + name);
+            if (li) li.classList.add('active');
+            document.getElementById('detail-member-name').innerText = name;
+
+            document.getElementById('p-avatar').innerText = currentMember.avatar;
+            document.getElementById('p-name').innerText = name;
+            document.getElementById('p-job').innerText = currentMember.job + ' (' + currentMember.rank + ') | ' + currentMember.years;
+            document.getElementById('p-keywords').innerHTML = currentMember.keywords.map(function(k){ return '<span class="mc-tag">'+k+'</span>'; }).join('');
+            document.getElementById('p-info-list').innerHTML = '<div>입사일: '+currentMember.history[currentMember.history.length-1].date+'</div>';
+            
+            document.getElementById('p-skills').innerHTML = currentMember.skills.map(function(s) {
+                return '<div class="skill-row"><div class="skill-info"><span>'+s.name+'</span><span>'+s.per+'%</span></div><div class="progress-track"><div class="progress-fill" style="width:'+s.per+'%; background:'+s.color+'"></div></div></div>';
+            }).join('');
+            document.getElementById('p-strengths').innerHTML = currentMember.strengths.map(function(s){ return '<div class="swot-item">+ '+s+'</div>'; }).join('');
+            document.getElementById('p-weaknesses').innerHTML = currentMember.weaknesses.map(function(s){ return '<div class="swot-item">- '+s+'</div>'; }).join('');
+            
+            var growthContainer = document.getElementById('growth-stages');
+            growthContainer.innerHTML = currentMember.growthStages.map(function(stage, idx) {
+                var isActive = idx === 2 ? 'active' : '';
+                var arrow = idx < 2 ? '<div class="growth-arrow">→</div>' : '';
+                return '<div class="growth-box '+isActive+'"><div class="gb-label">'+stage.label+'</div><div class="gb-content">'+stage.desc+'</div></div>' + arrow;
+            }).join('');
+            document.getElementById('growth-desc').innerText = currentMember.growthDesc || '';
+            
+            document.getElementById('p-history').innerHTML = currentMember.history.map(function(h) {
+                return '<div class="timeline-item"><div class="tl-date">'+h.date+'</div><div class="tl-title">'+h.title+'</div><div class="tl-desc">'+h.desc+'</div></div>';
+            }).join('');
+
+            // Call File Renderer
+            renderMemberFiles(currentMember);
+
+            var finalScore = currentMember.kpiTotal * 0.8 + currentMember.coreValues.reduce(function(a,b){return a+b.s},0)/5 * 0.2;
+            document.getElementById('final-grade').innerText = finalScore >= 90 ? 'S' : (finalScore >= 80 ? 'A' : 'B');
+            document.getElementById('sum-kpi').innerText = currentMember.kpiTotal;
+            document.getElementById('sum-cv').innerText = Math.round(currentMember.coreValues.reduce(function(a,b){return a+b.s},0)/5);
+            document.getElementById('kpi-val').innerText = currentMember.kpiTotal + '%';
+            document.getElementById('kpi-desc').innerText = currentMember.kpiDesc;
+            var dashOffset = 339 - (339 * currentMember.kpiTotal / 100);
+            setTimeout(function() { document.getElementById('kpi-donut').style.strokeDashoffset = dashOffset; }, 100);
+            document.getElementById('cv-list').innerHTML = currentMember.coreValues.map(function(c) {
+                return '<div style="margin-bottom:8px; font-size:13px;"><div style="display:flex; justify-content:space-between; margin-bottom:2px;"><span>'+c.n+'</span><strong>'+c.s+'</strong></div><div style="height:4px; background:#eee; border-radius:2px;"><div style="width:'+c.s+'%; height:100%; background:var(--color-teal); border-radius:2px;"></div></div></div>';
+            }).join('');
+            document.getElementById('dev-current').innerText = currentMember.currRole;
+            document.getElementById('dev-goal').innerText = currentMember.goalRole;
+            document.getElementById('dev-comp-goals').innerHTML = currentMember.compGoals.map(function(g){ return '<li class="goal-item">'+g+'</li>'; }).join('');
+            document.getElementById('dev-biz-goals').innerHTML = currentMember.bizGoals.map(function(g){ return '<li class="goal-item">'+g+'</li>'; }).join('');
+
+            var roadmapContainer = document.getElementById('growth-roadmap-list');
+            roadmapContainer.innerHTML = currentMember.growthRoadmap.map(function(item, index) {
+                var checkedClass = item.checked ? 'checked' : '';
+                return '<div class="roadmap-item '+checkedClass+'" style="cursor: default;"><div class="rm-checkbox"></div><div class="rm-text">'+item.task+'</div></div>';
+            }).join('');
+
+            var pref = currentMember.feedbackStyle;
+            document.getElementById('val-directness').innerText = pref.directness;
+            document.getElementById('desc-directness').innerText = styleMap[pref.directness].desc;
+            document.getElementById('icon-directness').innerText = styleMap[pref.directness].icon;
+            document.getElementById('val-focus').innerText = pref.focus;
+            document.getElementById('desc-focus').innerText = styleMap[pref.focus].desc;
+            document.getElementById('icon-focus').innerText = styleMap[pref.focus].icon;
+            document.getElementById('val-tone').innerText = pref.tone;
+            document.getElementById('desc-tone').innerText = styleMap[pref.tone].desc;
+            document.getElementById('icon-tone').innerText = styleMap[pref.tone].icon;
+            document.getElementById('pref-guide-text').innerText = 'AI가 '+name+'님의 성향('+pref.directness+', '+pref.focus+', '+pref.tone+')을 고려하여 맞춤형 피드백 초안을 작성합니다.';
+            var prefItems = document.querySelectorAll('.pref-item');
+            for(var i=0; i<prefItems.length; i++) prefItems[i].classList.add('highlight');
+            
+            switchDetailTab('basic', document.querySelector('#view-feedback-detail .detail-tab'));
+            
+            var scrollWrap = detailView.querySelector('.detail-scroll-wrapper');
+            if(scrollWrap) scrollWrap.scrollTop = 0;
+
+            setDefaultFeedbackExamples(name, currentMember);
+        }
+
+        function renderMemberFiles(member) {
+            var files = member.files || [];
+            
+            var mobileList = document.getElementById('file-list-mobile');
+            if (mobileList) {
+                if (files.length === 0) {
+                    mobileList.innerHTML = '<span style="color:#aaa; font-size:12px;">등록된 파일이 없습니다.</span>';
+                } else {
+                    mobileList.innerHTML = files.map(function(f) {
+                        return '<a href="#" onclick="alert(\'LG화학 파이팅!\'); return false;" class="file-chip">' + f.icon + ' ' + f.label + '</a>';
+                    }).join('');
+                }
+            }
+
+            var donutMenu = document.getElementById('file-donut-menu');
+            donutMenu.classList.remove('open');
+            
+            if (!files || files.length === 0) {
+                donutMenu.innerHTML = '';
+                return;
+            }
+
+            var radiusInner = 100;
+            var radiusOuter = 170;
+            var totalFiles = files.length;
+            var startAngle = Math.PI;
+            var endAngle = 2 * Math.PI;
+            var angleRange = endAngle - startAngle;
+            var step = totalFiles > 1 ? angleRange / (totalFiles - 1) : 0;
+            
+            donutMenu.innerHTML = files.map(function(f, index) {
+                var angleRad = totalFiles === 1 ? 1.5 * Math.PI : startAngle + (step * index);
+                var currentRadius = (totalFiles > 5 && index % 2 !== 0) ? radiusOuter : radiusInner;
+                if (totalFiles > 8 && index % 2 !== 0) currentRadius = 180;
+
+                var x = currentRadius * Math.cos(angleRad);
+                var y = currentRadius * Math.sin(angleRad);
+                
+                return '<a href="#" onclick="alert(\'LG화학 파이팅!\'); return false;" class="file-donut-item" data-label="'+f.label+'" style="--tx: '+x+'px; --ty: '+y+'px;">'+f.icon+'</a>';
+            }).join('');
+        }
+
+        function toggleFileDonut() {
+            var menu = document.getElementById('file-donut-menu');
+            if (menu) {
+                menu.classList.toggle('open');
+            }
+        }
+
+        function detectTopic(text) {
+            if (!text) return null;
+            var scores = {};
+            var maxScore = 0;
+            var bestKey = null;
+
+            for (var key in KEYWORD_MAP) {
+                var keywords = KEYWORD_MAP[key];
+                var score = 0;
+                for (var i = 0; i < keywords.length; i++) {
+                    if (text.includes(keywords[i])) score++;
+                }
+                if (score > maxScore) {
+                    maxScore = score;
+                    bestKey = key;
+                }
+            }
+            return bestKey;
+        }
+
+        function topicToGroupName(topic) {
+            if (topic === 'presentation') return "발표/스토리텔링";
+            if (topic === 'trend') return "시장/트렌드 이해";
+            if (topic === 'communication') return "소통 및 커뮤니케이션";
+            return "소통 및 커뮤니케이션"; 
+        }
+
+        function buildStrengthExample(memberName, member) {
+            var s = member.strengths || [];
+            var picked = s.slice(0, 1).join('');
+            return memberName+'님은 '+picked+'을 발휘하는 데 강점이 있습니다.';
+        }
+
+        function buildImprovementExample(member) {
+            var w = member.weaknesses || [];
+            var picked = w.slice(0, 1).join('');
+            return picked+' 과정에서 보완이 필요합니다.';
+        }
+
+        function buildGrowthExample(memberName, member) {
+            var goalRole = member.goalRole || '차기 리더 역할';
+            var direction = (member.compGoals && member.compGoals[0]) || (member.bizGoals && member.bizGoals[0]) || '핵심 역량 강화';
+            return memberName+'님은 '+goalRole+'를 목표로 하며 '+direction+'을 위한 실천을 권장합니다.';
+        }
+
+        function setDefaultFeedbackExamples(name, member) {
+            var strBox = document.getElementById('input-str');
+            var impBox = document.getElementById('input-imp');
+            var groBox = document.getElementById('input-gro');
+
+            if (!strBox || !impBox || !groBox) return;
+
+            strBox.placeholder = buildStrengthExample(name, member);
+            impBox.placeholder = buildImprovementExample(member);
+            groBox.placeholder = buildGrowthExample(name, member);
+            
+            strBox.value = '';
+            impBox.value = '';
+            groBox.value = '';
+        }
+
+        function getCandidates(inputText, type, samples) {
+            var input = inputText.trim();
+            var detectedKey = null;
+            
+            for (var key in KEYWORD_MAP) {
+                var keywords = KEYWORD_MAP[key];
+                for(var i=0; i<keywords.length; i++) {
+                    if (input.includes(keywords[i])) {
+                        detectedKey = key;
+                        break;
+                    }
+                }
+                if(detectedKey) break;
+            }
+
+            var targetGroup = detectedKey ? KEY_TO_GROUP[detectedKey] : null;
+            var typeSamples = samples.filter(function(s) { return s.type === type; });
+            var groupCandidates = [];
+            if (targetGroup) {
+                groupCandidates = typeSamples.filter(function(s) { return s.groupName === targetGroup; });
+            }
+
+            if (groupCandidates.length === 0) {
+                groupCandidates = typeSamples.filter(function(s) { return s.groupName === "일반"; });
+            }
+
+            return groupCandidates.length > 0 ? groupCandidates : typeSamples;
+        }
+
+        function findTwoUniqueSamples(inputText, type, samples) {
+            var candidates = getCandidates(inputText, type, samples);
+            
+            if (candidates.length === 0) {
+                return ["(관련된 추천 사례가 없습니다)", "(관련된 추천 사례가 없습니다)"];
+            }
+            
+            if (candidates.length === 1) {
+                return [candidates[0].text, "(추천 사례가 부족합니다)"];
+            }
+
+            var shuffled = candidates.slice().sort(function() { return 0.5 - Math.random(); });
+            
+            return [shuffled[0].text, shuffled[1].text];
+        }
+
+        function findMatchingSample(inputText, type, samples) {
+            var candidates = getCandidates(inputText, type, samples);
+            if (candidates.length === 0) return "(관련된 추천 사례가 없습니다)";
+            return candidates[Math.floor(Math.random() * candidates.length)].text;
+        }
+
+        function detectMemberType(member) {
+            var jobLower = (member.job || '').toLowerCase();
+            if(jobLower.includes('researcher') || (jobLower.includes('scientist') && !jobLower.includes('data'))) return 'researcher';
+            if(jobLower.includes('data') || jobLower.includes('ai') || jobLower.includes('ml')) return 'data_ai';
+            if(jobLower.includes('manager') || jobLower.includes('pm') || jobLower.includes('leader')) return 'leader_pm';
+            if(jobLower.includes('ux') || jobLower.includes('designer') || jobLower.includes('product')) return 'ux_product';
+            return 'leader_pm'; 
+        }
+
+        function buildGrowthSuggestions(member, inputGroText) {
+            var type = detectMemberType(member);
+            var programs = PROGRAM_SUGGESTIONS[type] || [];
+            var mainProgram = programs[0] || '사내 직무 교육';
+            
+            var inputText = (inputGroText || "").trim();
+            
+            var isGlobal = false;
+            var globalKeywords = ['해외', '글로벌', '외국어', '영어', '중국어', '일본어', '어학', '파견', '주재원', '유학'];
+            for(var i=0; i<globalKeywords.length; i++) {
+                if(inputText.includes(globalKeywords[i])) {
+                    isGlobal = true;
+                    break;
+                }
+            }
+
+            var goal = member.goalRole || '차기 리더';
+            var comp = (member.compGoals && member.compGoals[0]) || '직무 전문성';
+            var biz = (member.bizGoals && member.bizGoals[0]) || '비즈니스 성과';
+
+            var gro1_dyn, gro2_dyn;
+
+            if (isGlobal) {
+                gro1_dyn = '글로벌 역량 강화를 위해 ' + (member.files ? '사내 어학 지원 프로그램' : '비즈니스 영어 과정') + '을 수강하고, 해외 지사와의 협업 프로젝트에 주도적으로 참여해 보는 것을 추천합니다.';
+                gro2_dyn = '향후 ' + goal + '로서의 성장을 위해 해외 컨퍼런스나 글로벌 세미나에 참석하여 최신 트렌드를 파악하고 네트워킹을 넓히는 기회를 가져보시기 바랍니다.';
+            } else {
+                gro1_dyn = goal+' 역할로 나아갈 수 있도록'+mainProgram+'과 같이 '+comp+'을 체계적으로 다루는 사내 교육을 수강해 보시면 좋겠습니다.';
+                gro2_dyn = biz+' 목표를 고려할 때 검증된 결과를 실무 프로젝트와 연결해 비즈니스 적용 가능성을 함께 제시하는 접근이 도움이 될 것입니다.';
+            }
+
+            return { gro1: gro1_dyn, gro2: gro2_dyn };
+        }
+
+        // [수정 2] AI 행동 사례 찾기 (로딩 효과 추가)
+        function generateEvidence() {
+            var strInput = document.getElementById('input-str').value;
+            var impInput = document.getElementById('input-imp').value;
+            var groInput = document.getElementById('input-gro').value;
+
+            if(!strInput || !impInput) {
+                alert('강점과 보완점 키워드를 입력해주세요.'); return;
+            }
+
+            // 버튼 로딩 상태 변경
+            var btn = document.getElementById('btn-generate-evidence');
+            var originalText = btn.innerHTML; // 아이콘 포함 내용 저장
+            
+            btn.disabled = true;
+            btn.innerHTML = '⏳ AI가 행동 사례를 분석 중입니다...';
+            btn.style.opacity = "0.7";
+            btn.style.cursor = "wait";
+
+            // 1초(1000ms) 딜레이 후 실행
+            setTimeout(function() {
+                var strs = findTwoUniqueSamples(strInput, 'strength', FEEDBACK_LIBRARY.behavioralSamples);
+                document.getElementById('ev-text-str-1').innerText = strs[0];
+                document.getElementById('ev-text-str-2').innerText = strs[1];
+                
+                var imps = findTwoUniqueSamples(impInput, 'improvement', FEEDBACK_LIBRARY.behavioralSamples);
+                document.getElementById('ev-text-imp-1').innerText = imps[0];
+                document.getElementById('ev-text-imp-2').innerText = imps[1];
+
+                var growthSuggestions = buildGrowthSuggestions(currentMember, groInput);
+                document.getElementById('ev-text-gro-1').innerText = growthSuggestions.gro1;
+                document.getElementById('ev-text-gro-2').innerText = growthSuggestions.gro2;
+                
+                document.getElementById('ai-evidence-section').classList.add('active');
+                
+                var step2Buttons = document.querySelectorAll('#ai-evidence-section button');
+                for(var i=0; i<step2Buttons.length; i++) step2Buttons[i].disabled = false;
+
+                // 스크롤 이동 (부드럽게)
+                document.getElementById('ai-evidence-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                // 버튼 상태 복구
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                btn.style.opacity = "1";
+                btn.style.cursor = "pointer";
+
+            }, 1000); 
+        }
+
+        function reexplore(type, index) {
+            var inputId = 'input-str';
+            var sampleType = 'strength';
+            if(type === 'imp') { inputId = 'input-imp'; sampleType = 'improvement'; }
+            
+            if(type === 'gro') { 
+                var groInput = document.getElementById('input-gro').value;
+                var suggestions = buildGrowthSuggestions(currentMember, groInput);
+                var text = index === 1 ? suggestions.gro2 : suggestions.gro1; 
+                document.getElementById('ev-text-gro-'+index).innerText = (index === 1 ? suggestions.gro1 : suggestions.gro2);
+                return; 
+            }
+
+            var inputVal = document.getElementById(inputId).value;
+            var targetElem = document.getElementById('ev-text-'+type+'-'+index);
+            var currentText = targetElem.innerText;
+            
+            var otherIndex = index === 1 ? 2 : 1;
+            var otherText = document.getElementById('ev-text-'+type+'-'+otherIndex).innerText;
+
+            var candidates = getCandidates(inputVal, sampleType, FEEDBACK_LIBRARY.behavioralSamples);
+            
+            if (candidates.length <= 1) {
+                return; 
+            }
+
+            var newText = currentText;
+            for(var i=0; i<10; i++) {
+                var rand = candidates[Math.floor(Math.random() * candidates.length)].text;
+                if (rand !== currentText && rand !== otherText) {
+                    newText = rand;
+                    break;
+                }
+            }
+            targetElem.innerText = newText;
+
+            var box = document.getElementById('ev-box-'+type+'-'+index);
+            var btn = document.getElementById('btn-sel-'+type+'-'+index);
+            if (box.classList.contains('selected')) {
+                toggleSelection(type, index); 
+            }
+        }
+        
+        function toggleSelection(type, index) {
+            var boxId = 'ev-box-' + type + '-' + index;
+            var btnId = 'btn-sel-' + type + '-' + index;
+            var textId = 'ev-text-' + type + '-' + index;
+
+            var box = document.getElementById(boxId);
+            var btn = document.getElementById(btnId);
+            var text = document.getElementById(textId).innerText;
+
+            if (box.classList.contains('selected')) {
+                box.classList.remove('selected');
+                btn.classList.remove('active');
+                btn.innerText = '선택';
+                selectedEvidence[type + index] = '';
+            } else {
+                box.classList.add('selected');
+                btn.classList.add('active');
+                btn.innerText = '선택됨';
+                selectedEvidence[type + index] = text;
+            }
+            updateGenerateButtonState();
+        }
+
+        function cleanQuotes(text) {
+            if (!text) return "";
+            return text.trim().replace(/^"(.*)"$/, '$1').replace(/^“(.*)”$/, '$1').replace(/^'(.*)'$/, '$1');
+        }
+
+        function handleGenerateFinalFeedback() {
+            var btn = document.getElementById('btn-generate-feedback');
+            var finalBox = document.getElementById('final-feedback-text');
+
+            var hasStr = selectedEvidence.str1 || selectedEvidence.str2;
+            var hasImp = selectedEvidence.imp1 || selectedEvidence.imp2;
+            var hasGro = selectedEvidence.gro1 || selectedEvidence.gro2;
+
+            if (!hasStr || !hasImp || !hasGro) {
+                alert('강점, 보완점, 성장 제언을 각각 최소 1개씩 선택해주세요.');
+                return;
+            }
+
+            btn.disabled = true;
+            var originalText = btn.innerText;
+            btn.innerText = '⏳ AI가 피드백을 정리하는 중입니다...';
+            finalBox.value = 'AI가 팀원의 성향과 사례를 바탕으로 피드백을 정리하고 있습니다...';
+
+            setTimeout(function() {
+                createFinalMsgWithStyle();
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }, 1500);
+        }
+
+        // [최종 수정] HR 피드백 톤앤매너 완벽 반영 로직
+        function createFinalMsgWithStyle() {
+            if (!currentMember) return;
+
+            var name = Object.keys(teamDB).find(function(n){ return teamDB[n] === currentMember }) || '팀원';
+            
+            var strInput = (document.getElementById('input-str').value || '').trim();
+            var impInput = (document.getElementById('input-imp').value || '').trim();
+            var groInput = (document.getElementById('input-gro').value || '').trim();
+
+            var strEv1 = cleanQuotes(selectedEvidence.str1);
+            var strEv2 = cleanQuotes(selectedEvidence.str2);
+            var impEv1 = cleanQuotes(selectedEvidence.imp1);
+            var impEv2 = cleanQuotes(selectedEvidence.imp2);
+            var groEv1 = cleanQuotes(selectedEvidence.gro1);
+            var groEv2 = cleanQuotes(selectedEvidence.gro2);
+
+            var feedbackMsg = "";
+
+            // [1. 도입]
+            var intros = [
+                "이번 평가 기간 동안 " + name + "님의 기여와 성장을 함께 돌아보고자 합니다.",
+                "이번 리뷰에서는 지난 기간 동안 보여주신 " + name + "님의 강점과 성장 가능성을 중심으로 말씀드리고자 합니다."
+            ];
+            feedbackMsg += intros[Math.floor(Math.random() * intros.length)] + "\n\n";
+
+            // [2. 강점 문단]
+            if (strInput) {
+                // STEP1 입력 그대로 사용
+                if(!strInput.endsWith('.')) strInput += '.';
+                feedbackMsg += strInput + " "; 
+                
+                if (strEv1) {
+                    if (!strEv1.endsWith('.')) strEv1 += '.';
+                    // [수정] 강점 + 사례 연결: 큰따옴표 제거 및 '특히' 문구 수정
+                    var templates1 = [
+                        strEv1 + " 이 사례는 " + name + "님의 강점을 잘 보여주는 예입니다.",
+                        strEv1 + " 이러한 성과는 " + name + "님의 역량이 실무에서 효과적으로 발휘된 순간입니다.",
+                        strEv1 + " 이 과정에서 드러난 접근 방식은 " + name + "님의 강점을 명확하게 보여줍니다.",
+                        strEv1 + " 이와 같은 사례는 " + name + "님이 가진 역량이 팀에 어떤 가치를 더하는지 잘 설명합니다."
                     ];
-                    if (issue) lines.push(`사유: ${issue.label}`);
-                    return lines;
-                  } else {
-                    let base = `실제 달성률: ${value.toFixed(1)}%`;
-                    if (issue) base += ` · 이슈: ${issue.label}`;
-                    if (monthIdx === kpiLowestIndex) base += " · 변곡점(이슈 영향 최대)";
-                    return base;
-                  }
-                },
-              },
-            },
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              max: 100,
-              ticks: { stepSize: 20 },
-            },
-          },
-        },
-      });
-    }
+                    feedbackMsg += templates1[Math.floor(Math.random() * templates1.length)];
+                }
+                
+                if (strEv2) {
+                    if (!strEv2.endsWith('.')) strEv2 += '.';
+                    // [수정] 추가 사례 연결: 줄바꿈(\n\n) 제거하여 바로 이어지도록 변경
+                    feedbackMsg += " 또한, " + strEv2 + " 이 역시 이러한 강점이 잘 드러난 순간이었습니다.";
+                }
+                feedbackMsg += "\n\n";
+            }
 
-    function computeQuantAverage() {
-      const sum = currentAdjSeries.reduce((acc, v) => acc + v, 0);
-      return sum / currentAdjSeries.length;
-    }
+            // [3. 보완점 문단]
+            if (impInput) {
+                // 접속사 중복 방지 (규칙 2) - 입력된 문장 앞의 접속사 제거
+                var cleanImp = impInput.replace(/^(반면|다만|하지만|한편),?\s*/, '');
+                // 첫 글자 대문자 처리 등의 필요가 없으므로 그대로 사용하되, 문맥을 위해 앞쪽 공백 제거
+                if (!cleanImp.endsWith('.')) cleanImp += '.';
+                
+                // 자연스러운 접속사 선택
+                var impStart = Math.random() > 0.5 ? "반면, " : "다만, ";
+                feedbackMsg += impStart + cleanImp + " ";
 
-    function setupCoreValueInputs() {
-      const cards = document.querySelectorAll(".core-value-card");
-      cards.forEach((card) => {
-        const range = card.querySelector('input[type="range"]');
-        const valueSpan = card.querySelector(".score-value");
-        const deviationPill = card.querySelector(".deviation-pill");
-        const deviationBox = card.querySelector(".deviation-inline");
-        const deviationText = deviationBox.querySelector(".text");
-        const ignoreBtn = deviationBox.querySelector(".btn-ignore");
-        const showEvidenceBtn = deviationBox.querySelector(".btn-show-evidence");
+                if (impEv1) {
+                    if (!impEv1.endsWith('.')) impEv1 += '.';
+                    // [수정] 보완점 + 사례 연결: 큰따옴표 제거
+                    var impTemplates = [
+                        impEv1 + " 이와 관련해 이러한 사례가 있었으며, 이는 앞으로 개선할 여지가 있는 부분을 보여줍니다.",
+                        impEv1 + " 또한 이 사례는 업무 수행 과정에서 보완될 수 있는 지점을 시사합니다.",
+                        impEv1 + " 실제로 이 상황에서의 경험은 향후 더 나은 성과를 위해 되짚어볼 만한 부분입니다."
+                    ];
+                    feedbackMsg += impTemplates[Math.floor(Math.random() * impTemplates.length)] + " ";
+                }
+                
+                // 마무리 및 격려 (규칙 2)
+                if (impEv2) {
+                     if (!impEv2.endsWith('.')) impEv2 += '.';
+                     // [수정] 큰따옴표 제거 및 '이 부분도 함께'로 문맥 수정
+                     feedbackMsg += "\n추가적으로 " + impEv2 + " 이 부분도 함께 고려한다면 더욱 완성도 높은 업무 수행이 가능할 것입니다.";
+                } else {
+                    feedbackMsg += "이 부분이 보완되면 전체 워크플로우의 효율이 더 높아질 것으로 기대됩니다.";
+                }
+                feedbackMsg += "\n\n";
+            }
 
-        const coreName = card.getAttribute("data-core-name");
+            // [4. 성장 문단]
+            // 성장 문단 도입부 (규칙 3 - '성장 측면에서는' 금지)
+            var growthIntros = [
+                "앞으로의 방향성을 고려하면",
+                "향후 발전을 위해서는",
+                "커리어 목표를 생각해보았을 때",
+                "장기적인 관점에서 보면",
+                "지속적인 성장을 위해서는"
+            ];
+            var selectedIntro = growthIntros[Math.floor(Math.random() * growthIntros.length)];
 
-        range.addEventListener("input", () => {
-          const leaderScore = Number(range.value);
-          valueSpan.textContent = leaderScore.toString();
+            if (groInput) {
+                if(!groInput.endsWith('.')) groInput += '.';
+                // 도입부 + STEP1 입력 그대로 연결
+                feedbackMsg += selectedIntro + " " + groInput + " ";
+            }
+            
+            // [수정] 성장 제언 1, 2 모두 반영되도록 로직 변경
+            
+            // 선택된 사례가 없으면 자동 추천 로직 사용
+            if (!groEv1 && !groEv2 && groInput) {
+                 var autoSug = buildGrowthSuggestions(currentMember, groInput);
+                 groEv1 = autoSug.gro1;
+                 groEv2 = autoSug.gro2;
+            }
 
-          const aiScore = Number(card.getAttribute("data-ai-score")) || 0;
-          const diff = Math.abs(leaderScore - aiScore);
+            // 성장 제언 1 처리
+            if (groEv1) {
+                if (!groEv1.endsWith('.')) groEv1 += '.';
+                var bridges1 = [
+                     "이를 보다 체계적으로 준비하기 위해서는 " + groEv1,
+                     "이를 실천으로 옮기는 방법으로는 " + groEv1,
+                     "이를 뒷받침하기 위해 " + groEv1 + " 활용해보시면 좋습니다.",
+                     "이러한 경험은 향후 성장에 큰 자산이 될 것입니다. 우선 " + groEv1
+                ];
+                feedbackMsg += bridges1[Math.floor(Math.random() * bridges1.length)] + " ";
+            }
 
-          if (diff >= DEVIATION_THRESHOLD) {
-            deviationPill.classList.add("visible");
-            deviationBox.classList.remove("hidden");
-            deviationText.innerHTML =
-              `<strong>${coreName}</strong> 항목에서 AI 예상 점수는 <strong>${aiScore}점</strong>, ` +
-              `리더 입력 점수는 <strong>${leaderScore}점</strong>으로 <strong>${diff}점</strong> 차이가 있습니다. ` +
-              `동료 평가 데이터를 참고해 점수를 한 번 더 점검할 수 있습니다.`;
-          } else {
-            deviationPill.classList.remove("visible");
-            deviationBox.classList.add("hidden");
-          }
-        });
+            // 성장 제언 2 처리 (접속사로 자연스럽게 연결)
+            if (groEv2) {
+                if (!groEv2.endsWith('.')) groEv2 += '.';
+                var bridges2 = [
+                    "구체적으로 " + groEv2,
+                    "또한 " + groEv2,
+                    "더불어 " + groEv2,
+                    "이와 함께 " + groEv2
+                ];
+                feedbackMsg += bridges2[Math.floor(Math.random() * bridges2.length)];
+            }
+            
+            feedbackMsg += "\n";
 
-        ignoreBtn.addEventListener("click", () => {
-          deviationBox.classList.add("hidden");
-        });
+            // [5. 지원 및 마무리] (규칙 5)
+            var closings = [
+                "앞으로도 지속적인 성장을 적극적으로 지원하겠습니다.",
+                "리더로서 " + name + "님의 커리어 목표가 실현될 수 있도록 필요한 자원과 기회를 꾸준히 제공하겠습니다.",
+                "함께 더 나은 방향으로 발전해갈 수 있도록 계속 지원하겠습니다."
+            ];
+            // [수정] 앞 문장에서 한 칸 엔터(줄바꿈) 적용
+            feedbackMsg += "\n" + closings[Math.floor(Math.random() * closings.length)];
 
-        showEvidenceBtn.addEventListener("click", () => {
-          openPeerModal(coreName);
-        });
-      });
-    }
-
-    function getCoreValuesInfo() {
-      const cards = document.querySelectorAll(".core-value-card");
-      let sum = 0;
-      let count = 0;
-      let topName = "";
-      let topScore = -1;
-      let lowName = "";
-      let lowScore = 101;
-
-      cards.forEach((card) => {
-        const range = card.querySelector('input[type="range"]');
-        if (!range) return;
-        const score = Number(range.value) || 0;
-        sum += score;
-        count += 1;
-        if (score > topScore) {
-          topScore = score;
-          topName = card.getAttribute("data-core-name") || "";
+            var finalBox = document.getElementById('final-feedback-text');
+            if (finalBox) finalBox.value = feedbackMsg;
         }
-        if (score < lowScore) {
-          lowScore = score;
-          lowName = card.getAttribute("data-core-name") || "";
+        
+        function updateGenerateButtonState() {
+            var btn = document.getElementById('btn-generate-feedback');
+            var hasStr = selectedEvidence.str1 || selectedEvidence.str2;
+            var hasImp = selectedEvidence.imp1 || selectedEvidence.imp2;
+            var hasGro = selectedEvidence.gro1 || selectedEvidence.gro2;
+            if(btn) btn.disabled = !(hasStr && hasImp && hasGro);
         }
-      });
 
-      return {
-        avg: count > 0 ? sum / count : 0,
-        topName,
-        topScore,
-        lowName,
-        lowScore
-      };
-    }
+        function resetFeedbackState() {
+            selectedEvidence = { str1: '', str2: '', imp1: '', imp2: '', gro1: '', gro2: '' };
+            var finalBox = document.getElementById('final-feedback-text');
+            if(finalBox) finalBox.value = '';
 
-    function getAiCoreInfo() {
-      const cards = document.querySelectorAll(".core-value-card");
-      let sum = 0;
-      let count = 0;
-      let topName = "";
-      let topScore = -1;
+            var types = ['str', 'imp', 'gro'];
+            for(var t=0; t<types.length; t++) {
+                var type = types[t];
+                for(var i=1; i<=2; i++) {
+                    var evText = document.getElementById('ev-text-'+type+'-'+i);
+                    if(evText) {
+                        evText.innerText = '(위 버튼을 눌러 AI 추천 사례를 확인하세요)';
+                        delete evText.dataset.cat;
+                    }
+                }
+            }
 
-      cards.forEach((card) => {
-        const score = Number(card.getAttribute("data-ai-score")) || 0;
-        sum += score;
-        count += 1;
-        if (score > topScore) {
-          topScore = score;
-          topName = card.getAttribute("data-core-name") || "";
+            var boxes = document.querySelectorAll('.evidence-box');
+            for(var i=0; i<boxes.length; i++) boxes[i].classList.remove('selected');
+            
+            var btns = document.querySelectorAll('.btn-select');
+            for(var i=0; i<btns.length; i++) {
+                btns[i].classList.remove('active');
+                btns[i].innerText = '선택';
+            }
+
+            var step2Buttons = document.querySelectorAll('#ai-evidence-section button');
+            for(var i=0; i<step2Buttons.length; i++) step2Buttons[i].disabled = true;
+
+            updateGenerateButtonState();
+
+            var aiSection = document.getElementById('ai-evidence-section');
+            if(aiSection) aiSection.classList.remove('active');
         }
-      });
-
-      return {
-        avg: count > 0 ? sum / count : 0,
-        topName,
-        topScore
-      };
-    }
-
-    function scoreToGrade(score) {
-      if (score >= 95) return "S";
-      if (score >= 85) return "A";
-      if (score >= 75) return "B";
-      if (score >= 65) return "C";
-      return "D";
-    }
-
-    function escapeHtml(str) {
-      return str
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
-    }
-
-    function computeAiResult() {
-      const name =
-        document.getElementById("employeeName").value.trim() || "구성원";
-      const team =
-        document.getElementById("employeeTeam").value.trim() || "어떤 팀";
-      const job =
-        document.getElementById("employeeJob").value.trim() || "어떤 직무";
-      const period =
-        document.getElementById("periodName").value.trim() || "2025 상반기";
-
-      const quantAvg = computeQuantAverage();
-      const coreInfoLeader = getCoreValuesInfo();
-      const coreInfoAi = getAiCoreInfo();
-
-      const quantWeight = 0.8;
-      const qualWeight = 0.2;
-
-      const aiOverallScore =
-        quantAvg * quantWeight + coreInfoAi.avg * qualWeight;
-      const leaderOverallScore =
-        quantAvg * quantWeight + coreInfoLeader.avg * qualWeight;
-
-      const aiGrade = scoreToGrade(aiOverallScore);
-      const leaderModelGrade = scoreToGrade(leaderOverallScore);
-
-      window.currentAiGrade = aiGrade;
-      window.leaderModelGrade = leaderModelGrade;
-
-      document.getElementById("aiFinalGradeDisplay").textContent = aiGrade;
-      document.getElementById("leaderModelGradeDisplay").textContent =
-        leaderModelGrade;
-
-      const peerBand =
-        aiOverallScore >= 95
-          ? "상위 5% 내"
-          : aiOverallScore >= 90
-          ? "상위 10% 내"
-          : aiOverallScore >= 85
-          ? "상위 20% 내"
-          : aiOverallScore >= 75
-          ? "상위 40% 내"
-          : "상위 60% 내";
-
-      const similarPercent = Math.floor(Math.random() * 41) + 40; // 40~80%
-
-      const explanationElem = document.getElementById("aiExplanation");
-      const rawComment = document.getElementById("leaderComment").value.trim();
-
-      let commentBlock = "<p>(추가 코멘트가 입력되지 않았습니다.)</p>";
-      if (rawComment) {
-        commentBlock = `<p><em>"${escapeHtml(rawComment)}"</em></p>`;
-      }
-
-      const compareSentence =
-        aiGrade === leaderModelGrade
-          ? "AI가 자체 분석한 등급과 리더가 입력한 정성 점수를 기준으로 계산한 등급이 동일합니다."
-          : `AI가 자체 분석한 등급(${aiGrade})과 리더 입력 점수 기준 계산 등급(${leaderModelGrade}) 사이에 차이가 있습니다. 리더 최종 등급을 선택할 때 이 차이를 참고해 볼 수 있습니다.`;
-
-      const html = `
-        <p><strong>${name}</strong>님은 <strong>${period}</strong> 동안 <strong>${team}</strong>에서 <strong>${job}</strong> 역할을 수행한 결과, AI는 자체 분석 기준으로 전체적으로 <strong>${aiGrade}</strong> 등급 수준의 성과라고 판단했습니다.</p>
-        <p>업무 목표 달성도 관점에서 보정된 평균 목표 달성률은 약 <strong>${quantAvg.toFixed(
-          1
-        )}%</strong>로, 동일 직무 구성원 중 <strong>${peerBand}</strong>에 해당하는 수준으로 가정했습니다. ${name}님과 유사한 성과를 보인 구성원의 약 <strong>${similarPercent}%</strong>는 <strong>${aiGrade}</strong> 등급을 받은 것으로 확인되었습니다.</p>
-        <p>핵심 가치 준수도 관점에서, 리더 입력 점수 기준으로는 특히 <strong>${coreInfoLeader.topName}</strong> 항목의 점수가 상대적으로 높게 나타났습니다. 이는 리더가 단순 실적뿐 아니라 해당 가치 요소를 중요하게 보고 있다는 신호로 해석할 수 있습니다.</p>
-        <p>AI는 자체 분석 시 업무 목표 달성도 지표에 약 <strong>${
-          quantWeight * 100
-        }%</strong>, 핵심 가치 준수도에 약 <strong>${
-        qualWeight * 100
-      }%</strong>의 가중치를 두어 종합 점수를 계산했습니다. ${compareSentence}</p>
-        <p>리더의 평가 관련 추가 코멘트는 다음과 같습니다.</p>
-        ${commentBlock}
-        <p>위 내용은 구성원에게도 동일하게 전달됩니다.</p>
-      `;
-      explanationElem.innerHTML = html;
-
-      const leaderSelect = document.getElementById("leaderFinalGrade");
-      if (leaderSelect) {
-        leaderSelect.value = aiGrade;
-        checkGradeDeviation();
-      }
-    }
-
-    function setupLeaderGradeSelect() {
-      const select = document.getElementById("leaderFinalGrade");
-      if (!select) return;
-      select.addEventListener("change", checkGradeDeviation);
-    }
-
-    function checkGradeDeviation() {
-      const select = document.getElementById("leaderFinalGrade");
-      const warning = document.getElementById("gradeDeviationWarning");
-      if (!select || !warning) return;
-      const leaderGrade = select.value;
-      const aiGrade = window.currentAiGrade || "A";
-
-      const li = GRADE_ORDER.indexOf(leaderGrade);
-      const ai = GRADE_ORDER.indexOf(aiGrade);
-
-      if (li === -1 || ai === -1) {
-        warning.classList.add("hidden");
-        return;
-      }
-
-      const diff = Math.abs(li - ai);
-      if (diff >= 2) {
-        warning.textContent = `AI 권장 등급(${aiGrade})과 리더 최종 등급(${leaderGrade}) 간 편차가 큽니다. 유사 성과자 대비 지나치게 관대하거나, 지나치게 냉정하지 않은지 한 번 더 점검해 주세요.`;
-        warning.classList.remove("hidden");
-      } else {
-        warning.classList.add("hidden");
-      }
-    }
-
-    function setupCommentSuggestButton() {
-      const btn = document.getElementById("commentSuggestBtn");
-      if (!btn) return;
-      btn.addEventListener("click", () => {
-        const quantAvg = computeQuantAverage();
-        const coreInfo = getCoreValuesInfo();
-        const name =
-          document.getElementById("employeeName").value.trim() || "해당 구성원";
-
-        const focusArea = coreInfo.lowName || "보완이 필요한 영역";
-        const strongArea = coreInfo.topName || "강점 영역";
-
-        const suggestion =
-          `${name}님의 이번 평가에서는 업무 목표 달성도(이슈 고려 보정 기준 약 ${quantAvg.toFixed(
-            1
-          )}%) 대비 ` +
-          `핵심 가치 준수도 중 <${strongArea}>에서 강점이 두드러지고, <${focusArea}>에서 상대적으로 보완 여지가 있는 것으로 보입니다.\n\n` +
-          `• 강점: <${strongArea}> 영역에서의 행동을 다음 평가 기간에도 유지·확대할 수 있도록 지원하겠습니다.\n` +
-          `• 보완: <${focusArea}> 관련하여 구체적인 행동 목표를 함께 설정하고, 중간 점검을 통해 성장 과정을 모니터링하겠습니다.\n\n` +
-          `이번 평가는 단순 등급 부여가 아니라, ${name}님의 장기적인 성장 방향을 함께 설계하기 위한 과정이라는 점을 함께 공유하고 싶습니다.`;
-
-        const textarea = document.getElementById("leaderComment");
-        if (textarea) textarea.value = suggestion;
-      });
-    }
-
-    function setupPeerModal() {
-      const backdrop = document.getElementById("peerModal");
-      const footerClose = document.getElementById("peerModalFooterCloseBtn");
-
-      const close = () => { backdrop.classList.add("hidden"); };
-
-      footerClose.addEventListener("click", close);
-      backdrop.addEventListener("click", (e) => {
-        if (e.target === backdrop) close();
-      });
-    }
-
-    function openPeerModal(coreName) {
-      const data = PEER_DATA[coreName] || PEER_DATA["Collaboration"];
-      const backdrop = document.getElementById("peerModal");
-      const title = document.getElementById("peerModalTitle");
-      const sub = document.getElementById("peerModalSub");
-      const tagRow = document.getElementById("peerTagRow");
-      const exampleText = document.getElementById("peerExampleText");
-
-      title.textContent = `동료 평가 데이터 확인 · ${data.title}`;
-      sub.textContent = "동료 평가에서 추출된 관련 키워드입니다. 클릭하여 구체적인 예시를 확인해 보세요.";
-
-      tagRow.innerHTML = "";
-      let firstKey = null;
-
-      data.tags.forEach((tagLabel, idx) => {
-        const chip = document.createElement("button");
-        chip.className = "chip";
-        chip.textContent = tagLabel;
-        if (idx === 0) {
-          chip.classList.add("active");
-          firstKey = tagLabel;
-        }
-        chip.addEventListener("click", () => {
-          const chips = tagRow.querySelectorAll(".chip");
-          chips.forEach((c) => c.classList.remove("active"));
-          chip.classList.add("active");
-          exampleText.textContent = data.examples[tagLabel] || "";
-        });
-        tagRow.appendChild(chip);
-      });
-
-      if (!firstKey && data.tags.length > 0) firstKey = data.tags[0];
-      exampleText.textContent = data.examples[firstKey] || "";
-
-      backdrop.classList.remove("hidden");
-    }
-
-    function setupFinishButton() {
-      const btn = document.getElementById("finishBtn");
-      btn.addEventListener("click", () => {
-        const name =
-          document.getElementById("employeeName").value.trim() || "구성원";
-        const aiGrade = window.currentAiGrade || "A";
-        const leaderGrade =
-          document.getElementById("leaderFinalGrade").value || "-";
-        const leaderModelGrade = window.leaderModelGrade || "-";
-        alert(
-          `데모 완료:\n\n이름: ${name}\nAI 권장 등급 (AI 기준): ${aiGrade}\n리더 입력 점수 기준 계산 등급: ${leaderModelGrade}\n리더 최종 등급: ${leaderGrade}\n\n※ 실제로 서버에 저장되지는 않고, 과제 발표용 화면 데모입니다.`
-        );
-      });
-    }
-
-    function setCoreValueAiScoresFor(name) {
-      const profile = CORE_AI_PROFILES[name] || CORE_AI_PROFILES["default"];
-      const cards = document.querySelectorAll(".core-value-card");
-      cards.forEach(card => {
-        const coreName = card.getAttribute("data-core-name");
-        const ai = profile[coreName] ?? 80;
-        card.setAttribute("data-ai-score", String(ai));
-      });
-    }
-
-    function resetCoreValueSlidersTo50() {
-      const cards = document.querySelectorAll(".core-value-card");
-      cards.forEach(card => {
-        const range = card.querySelector('input[type="range"]');
-        const valueSpan = card.querySelector(".score-value");
-        const deviationPill = card.querySelector(".deviation-pill");
-        const deviationBox = card.querySelector(".deviation-inline");
-        if (range) range.value = 50;
-        if (valueSpan) valueSpan.textContent = "50";
-        if (deviationPill) deviationPill.classList.remove("visible");
-        if (deviationBox) deviationBox.classList.add("hidden");
-      });
-    }
-  </script>
+    </script>
 </body>
 </html>

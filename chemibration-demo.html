@@ -1,0 +1,1954 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>CHEMIBRATION · AI 기반 공정 성과 평가 데모</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --brand-pink: #D7177B;
+      --brand-purple: #551D83;
+      --brand-sky: #70C0E6;
+      --brand-teal: #008785;
+      --brand-gray: #C4C4C4;
+
+      --lg-red: var(--brand-pink);
+      --lg-gray: #6b6b6b;
+      --lg-gold: var(--brand-sky);
+      --lg-black: #231f20;
+
+      --bg: #f4f6fb;
+      --card-bg: #ffffff;
+      --border: #e1e4f1;
+      --primary: var(--brand-pink);
+      --primary-soft: rgba(215, 23, 123, 0.08);
+      --danger: #ef4444;
+      --text-main: #111827;
+      --text-sub: #4b5563;
+      --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.12);
+      --radius-lg: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, #ffffff 0, #f4f6fb 50%, #e5e8fa 100%);
+      color: var(--text-main);
+    }
+
+    .page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 상단 그라데이션 바 */
+    .top-bar-wrap {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: linear-gradient(90deg, #D7177B 0%, #551D83 50%, #70C0E6 100%);
+      padding-bottom: 10px;
+    }
+
+    .top-bar {
+      height: 72px;
+      max-width: 1120px;
+      margin: 0 auto;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+    
+    .top-bar-wrap {
+      display: none !important;
+    }
+    
+    .top-accent {
+      height: 0;
+      display: none;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-text {
+      font-weight: 700;
+      font-size: 19px;
+      color: #ffffff;
+    }
+
+    .content-shell {
+      max-width: 1120px;
+      margin: 16px auto 32px;
+      padding: 0 20px 24px;
+    }
+
+    .content {
+      max-width: 1120px; /* 좌우 폭 넓게 사용 */
+      margin: 0 auto;
+      padding: 16px 0 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .top-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .user-info {
+      font-size: 13px;
+      color: #ffffff;
+      background: rgba(255,255,255,0.16);
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.35);
+      backdrop-filter: blur(10px);
+    }
+
+    /* 스텝퍼 */
+    .stepper-wrap {
+      position: relative;
+      padding: 16px 18px 18px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.95);
+      box-shadow: 0 12px 30px rgba(148, 163, 184, 0.35);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+    }
+
+    .stepper-line {
+      position: absolute;
+      left: 40px;
+      right: 40px;
+      top: 36px;
+      height: 3px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .stepper-line-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #D7177B, #551D83, #70C0E6);
+      transition: width 0.4s ease;
+    }
+
+    .stepper {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 1;
+    }
+
+    .step-indicator {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      min-width: 90px;
+      flex: 1;
+    }
+
+    .step-indicator .circle {
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      border: 2px solid #d9d9f3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #6b7280;
+      background: #f9fafb;
+      box-shadow: 0 1px 3px rgba(148,163,184,0.35);
+    }
+
+    .step-indicator span.label {
+      font-weight: 500;
+      color: #6b7280;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .step-indicator.active .circle {
+      border-color: var(--brand-sky);
+      background: #ffffff;
+      color: var(--brand-pink);
+      transform: scale(1.08);
+      box-shadow: 0 0 0 2px rgba(112,192,230,0.4);
+    }
+
+    .step-indicator.completed .circle {
+      border-color: var(--brand-teal);
+      background: var(--brand-teal);
+      color: white;
+    }
+
+    .step-indicator.active span.label { color: var(--brand-pink); }
+    .step-indicator.completed span.label { color: var(--brand-teal); }
+
+    .step-panel { display: none; }
+    .step-panel.active { display: block; }
+
+    /* 패널 공통 */
+    .panel {
+      background: rgba(255,255,255,0.98);
+      border-radius: var(--radius-lg);
+      padding: 20px 20px 18px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid var(--border);
+      animation: fadeInUp 0.35s ease;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .panel + .panel { margin-top: 4px; }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--lg-black);
+      position: relative;
+    }
+
+    .section-title::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, #e5e7eb, transparent);
+      margin-left: 8px;
+    }
+
+    .section-title span.badge {
+      font-size: 11px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      border: 1px solid rgba(215,23,123,0.2);
+    }
+
+    .small-note {
+      font-size: 11px;
+      color: var(--text-sub);
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 13px;
+    }
+
+    .field label {
+      font-weight: 500;
+      color: var(--text-sub);
+    }
+
+    .field input,
+    .field select {
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 7px 10px;
+      font-size: 13px;
+      background: #f9fafb;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      outline: none;
+      border-color: var(--brand-sky);
+      background: #ffffff;
+      box-shadow: 0 0 0 1px rgba(112,192,230,0.4);
+    }
+
+    .field input::placeholder { color: #9ca3af; }
+
+    .radio-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .radio-group label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: #f3f4f6;
+      border: 1px solid transparent;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .radio-group input[type="radio"] { accent-color: var(--brand-teal); }
+
+    .radio-group label:hover { background: #e5e7eb; }
+
+    .nav-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 16px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border-radius: 999px;
+      border: none;
+      padding: 9px 18px;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #D7177B, #551D83);
+      color: white;
+      box-shadow: 0 8px 18px rgba(60,16,83,0.45);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(60,16,83,0.6);
+    }
+
+    .btn-secondary {
+      background: #f3f4f6;
+      color: #111827;
+      border: 1px solid var(--brand-gray);
+    }
+
+    .btn-secondary:hover {
+      background: #e5e7eb;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(148,163,184,0.35);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: #374151;
+    }
+
+    .btn-ghost:hover {
+      background: #f9fafb;
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(148,163,184,0.25);
+    }
+
+    .btn-mini {
+      border-radius: 999px;
+      border: none;
+      padding: 4px 8px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: background 0.12s, transform 0.12s;
+    }
+
+    .btn-mini-primary {
+      background: var(--brand-pink);
+      color: white;
+    }
+
+    .btn-mini-primary:hover { transform: translateY(-1px); }
+
+    .btn-mini-secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .btn-mini-secondary:hover {
+      background: #d1d5db;
+      transform: translateY(-1px);
+    }
+
+    .chart-card {
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 14px 14px 10px;
+      margin-top: 8px;
+      background: linear-gradient(135deg, #f9fafb, #f4f6fb);
+    }
+
+    .chart-legend {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--text-sub);
+      margin-top: 4px;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      display: inline-block;
+      margin-right: 4px;
+      background: var(--lg-gray);
+    }
+
+    .legend-dot.gold { background: var(--brand-sky); }
+    .legend-dot.red { background: var(--brand-pink); }
+
+    .chart-placeholder {
+      text-align: center;
+      padding: 32px 0 26px;
+      font-size: 12px;
+      color: var(--text-sub);
+      border-radius: 14px;
+      border: 1px dashed var(--brand-gray);
+      background: #f9fafb;
+    }
+
+    /* 핵심 가치 준수도 카드 */
+    .core-values-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .core-value-card {
+      border-radius: 14px;
+      border: 1px solid #e1e4f1;
+      padding: 9px 11px;
+      background: linear-gradient(135deg, #fdfdff, #f4f6fb);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+
+    .core-value-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 9px 22px rgba(148,163,184,0.45);
+      border-color: rgba(85,29,131,0.4);
+    }
+
+    .core-value-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--lg-black);
+    }
+
+    .core-value-sub {
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+
+    .score-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .score-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--brand-pink);
+    }
+
+    .score-value {
+      font-size: 12px;
+      width: 32px;
+      text-align: right;
+      font-weight: 600;
+      color: var(--lg-black);
+    }
+
+    .deviation-pill {
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: #fee2e2;
+      color: var(--danger);
+      display: none;
+      border: 1px solid #fecaca;
+    }
+
+    .deviation-pill.visible { display: inline-flex; }
+
+    .deviation-inline {
+      margin-top: 6px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      font-size: 11px;
+      color: #7f1d1d;
+    }
+
+    .deviation-inline strong { color: #7f1d1d; }
+
+    .deviation-inline .buttons {
+      margin-top: 4px;
+      display: flex;
+      gap: 4px;
+    }
+
+    .comment-area {
+      width: 100%;
+      min-height: 80px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      font-size: 13px;
+      resize: vertical;
+      background: #f9fafb;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+
+    .comment-area:focus {
+      outline: none;
+      border-color: var(--brand-sky);
+      background: #ffffff;
+      box-shadow: 0 0 0 1px rgba(112,192,230,0.4);
+    }
+
+    /* Step3 */
+    .ai-result-grade {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: var(--lg-black);
+    }
+    .ai-result-subgrade {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 10px;
+      color: var(--text-sub);
+    }
+
+    .ai-explanation p {
+      font-size: 13px;
+      margin: 4px 0;
+      line-height: 1.6;
+      color: var(--text-sub);
+    }
+
+    .ai-explanation p strong { color: var(--lg-black); }
+
+    .grade-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 13px;
+    }
+
+    .grade-row select {
+      padding: 5px 11px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      max-width: 150px;
+      background: #f9fafb;
+    }
+
+    .grade-warning {
+      font-size: 12px;
+      background: #fef3c7;
+      color: #92400e;
+      padding: 6px 8px;
+      border-radius: 8px;
+      margin-top: 4px;
+      border: 1px solid #fde68a;
+    }
+
+    .hidden { display: none !important; }
+
+    /* 로딩 오버레이 */
+    .loading-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 60;
+    }
+
+    .loading-card {
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 18px 24px 16px;
+      box-shadow: 0 24px 60px rgba(15,23,42,0.6);
+      text-align: center;
+      max-width: 260px;
+    }
+
+    .loading-card p {
+      font-size: 13px;
+      margin: 4px 0 10px;
+      color: #4b5563;
+    }
+
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      border: 3px solid #e5e7eb;
+      border-top-color: var(--brand-pink);
+      margin: 0 auto;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* 모달 공통 */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 55;
+    }
+
+    .modal {
+      width: min(640px, 90%);
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 18px 20px 16px;
+      box-shadow: 0 24px 60px rgba(15,23,42,0.7);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .modal-sub {
+      font-size: 11px;
+      color: var(--text-sub);
+      margin-bottom: 8px;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .chip {
+      border-radius: 999px;
+      border: 1px solid #e5e7eb;
+      padding: 4px 8px;
+      font-size: 11px;
+      cursor: pointer;
+      background: #f9fafb;
+      color: #374151;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    .chip.active {
+      background: var(--brand-pink);
+      border-color: var(--brand-pink);
+      color: #ffffff;
+    }
+
+    .modal-body-box {
+      border-radius: 10px;
+      border: 1px solid #e5e7f1;
+      padding: 8px 10px;
+      background: #f9fafb;
+      font-size: 12px;
+      color: #374151;
+      line-height: 1.5;
+      min-height: 60px;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 720px) {
+      .core-values-grid,
+      .grid-2 { grid-template-columns: 1fr; }
+      .content-shell { padding: 0 12px 24px; }
+      .top-bar { padding: 0 12px; }
+      .stepper-wrap { padding: 14px 14px 16px; }
+      .stepper-line { left: 24px; right: 24px; }
+    }
+    
+    .top-bar-wrap {
+      display: none !important;
+    }
+
+    body {
+      font-size: 15px;
+    }
+
+    .section-title {
+      font-size: 18px;
+    }
+
+    .field,
+    .field label {
+      font-size: 14px;
+    }
+
+    .field input,
+    .field select,
+    .radio-group,
+    .comment-area,
+    .ai-explanation p,
+    .grade-row,
+    .user-info {
+      font-size: 14px;
+    }
+
+    .small-note,
+    .core-value-sub,
+    .chart-legend,
+    .deviation-pill,
+    .deviation-inline,
+    .grade-warning,
+    .modal-sub {
+      font-size: 12px;
+    }
+
+    .content-shell {
+      max-width: 1200px;     
+      margin: 16px auto 32px;
+      padding: 0 0 24px;    
+    }
+
+    .content {
+      max-width: 1200px;
+      margin: 0 auto;        
+    }
+
+    .panel {
+      max-width: 1200px; 
+      margin-left: 0;
+      margin-right: 0;
+    }
+    
+  </style>
+  
+</head>
+<body>
+  <div class="page">
+    <div class="top-bar-wrap">
+      <div class="top-accent"></div>
+      <header class="top-bar">
+        <div class="brand">
+          <div class="brand-text">CHEMIBRATION</div>
+        </div>
+        <div class="top-right">
+          <div class="user-info">리더: 박엘지</div>
+        </div>
+      </header>
+    </div>
+
+    <div class="content-shell">
+      <section class="stepper-wrap">
+        <div class="stepper-line">
+          <div class="stepper-line-fill" id="stepperFill"></div>
+        </div>
+        <div class="stepper">
+          <div class="step-indicator" data-step="1">
+            <div class="circle">1</div>
+            <span class="label">기본정보 · 업무 목표 달성도</span>
+          </div>
+          <div class="step-indicator" data-step="2">
+            <div class="circle">2</div>
+            <span class="label">핵심 가치 준수도(Core Values)</span>
+          </div>
+          <div class="step-indicator" data-step="3">
+            <div class="circle">3</div>
+            <span class="label">AI 결과 · 리더 최종 등급</span>
+          </div>
+        </div>
+      </section>
+
+      <main class="content">
+        <!-- STEP 1 -->
+        <section class="step-panel" data-step-panel="1">
+          <div class="panel">
+            <div class="section-title">
+              구성원 기본 정보
+            </div>
+
+            <div class="field" style="margin-bottom:6px;">
+              <label for="employeePreset">구성원 선택 (샘플)</label>
+              <select id="employeePreset">
+                <option value="">직접 입력</option>
+                <option value="박재현">박재현</option>
+                <option value="박태희">박태희</option>
+                <option value="박정호">박정호</option>
+                <option value="박재원">박재원</option>
+                <option value="하유림">하유림</option>
+              </select>
+              <span class="small-note">
+                목록에서 선택하면 이름/소속/직무/평가기간이 자동으로 채워지고, 구성원별로 다른 KPI 그래프와 핵심 가치 준수도 AI 예상 점수가 적용됩니다.
+              </span>
+            </div>
+
+            <div class="grid-2">
+              <div class="field">
+                <label for="employeeName">이름</label>
+                <input id="employeeName" type="text" placeholder="예: 박채현" />
+              </div>
+              <div class="field">
+                <label for="employeeTeam">소속 팀</label>
+                <input id="employeeTeam" type="text" placeholder="예: 리더십 개발팀" />
+              </div>
+              <div class="field">
+                <label for="employeeJob">직무 / 직급</label>
+                <input id="employeeJob" type="text" placeholder="예: 인사/선임" />
+              </div>
+              <div class="field">
+                <label for="periodName">평가 기간</label>
+                <input id="periodName" type="text" placeholder="예: 2025 상반기" />
+              </div>
+            </div>
+
+            <div class="field" style="margin-top:8px;">
+              <label>평가 유형</label>
+              <div class="radio-group">
+                <label>
+                  <input type="radio" name="evalType" value="mid" checked />
+                  중간평가 (1~6월 기준)
+                </label>
+                <label>
+                  <input type="radio" name="evalType" value="annual" />
+                  연말 평가 (1~12월 기준)
+                </label>
+              </div>
+            </div>
+
+            <div class="small-note">
+              ※ 이름/팀/직무/평가 기간·평가 유형을 입력한 뒤, 아래 <strong>[구성원 정보 확인 및 그래프 생성]</strong> 버튼을 눌러 월별 달성률 추이를 확인합니다.
+            </div>
+
+            <div style="margin-top:12px;">
+              <button class="btn btn-primary" id="generateChartBtn">
+                구성원 정보 확인 및 그래프 생성
+              </button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="section-title">
+              업무 목표 달성도 (KPI)
+              <span class="badge">자동 생성 · Context-Aware</span>
+            </div>
+
+            <div class="chart-card">
+              <div class="section-title" style="margin-bottom:4px;">
+                월별 달성률 추이 (실제 vs 이슈 고려 보정)
+              </div>
+              <div id="kpiPlaceholder" class="chart-placeholder">
+                구성원 기본 정보를 입력한 뒤<br/>
+                <strong>[구성원 정보 확인 및 그래프 생성]</strong> 버튼을 눌러 그래프를 확인하세요.
+              </div>
+              <canvas id="kpiChart" height="160" class="hidden"></canvas>
+              <div class="chart-legend">
+                <div>
+                  <span class="legend-dot"></span> 실제 달성률
+                </div>
+                <div>
+                  <span class="legend-dot gold"></span> 이슈 고려 보정 달성률
+                </div>
+                <div>
+                  <span class="legend-dot red"></span> 이슈 영향이 가장 컸던 달(변곡점)
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="nav-buttons" style="justify-content: flex-end;">
+            <button class="btn btn-primary" data-goto-step="2">
+              다음: 핵심 가치 준수도로 이동 →
+            </button>
+          </div>
+        </section>
+
+        <!-- STEP 2 -->
+        <section class="step-panel" data-step-panel="2">
+          <div class="panel">
+            <div class="section-title">
+              핵심 가치 준수도 (Core Values)
+              <span class="badge">Step 2</span>
+            </div>
+            <div class="small-note">
+              ※ 슬라이더로 리더 점수를 입력하면, AI 예상 점수와 차이가 클 때 각 항목 카드 안에 <strong>인라인 경고</strong>가 나타납니다.
+            </div>
+            <div class="core-values-grid" id="coreValuesGrid">
+              <div class="core-value-card"
+                data-core-name="Customer Focus"
+                data-ai-score="88">
+                <div class="core-value-header">
+                  <div>Customer Focus</div>
+                </div>
+                <div class="core-value-sub">
+                  고객 관점(Outside-in), 혁신 시도
+                </div>
+                <div class="score-row">
+                  <input type="range" min="0" max="100" value="50" />
+                  <span class="score-value">50</span>
+                  <span class="deviation-pill">편차 경고</span>
+                </div>
+                <div class="deviation-inline hidden">
+                  <div class="text"></div>
+                  <div class="buttons">
+                    <button class="btn-mini btn-mini-secondary btn-ignore">무시하고 진행</button>
+                    <button class="btn-mini btn-mini-primary btn-show-evidence">동료 평가 데이터 보기</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="core-value-card"
+                data-core-name="Agility"
+                data-ai-score="82">
+                <div class="core-value-header">
+                  <div>Agility</div>
+                </div>
+                <div class="core-value-sub">
+                  변화 대응, 지속적인 학습
+                </div>
+                <div class="score-row">
+                  <input type="range" min="0" max="100" value="50" />
+                  <span class="score-value">50</span>
+                  <span class="deviation-pill">편차 경고</span>
+                </div>
+                <div class="deviation-inline hidden">
+                  <div class="text"></div>
+                  <div class="buttons">
+                    <button class="btn-mini btn-mini-secondary btn-ignore">무시하고 진행</button>
+                    <button class="btn-mini btn-mini-primary btn-show-evidence">동료 평가 데이터 보기</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="core-value-card"
+                data-core-name="Collaboration"
+                data-ai-score="90">
+                <div class="core-value-header">
+                  <div>Collaboration</div>
+                </div>
+                <div class="core-value-sub">
+                  존중, One Company 마인드
+                </div>
+                <div class="score-row">
+                  <input type="range" min="0" max="100" value="50" />
+                  <span class="score-value">50</span>
+                  <span class="deviation-pill">편차 경고</span>
+                </div>
+                <div class="deviation-inline hidden">
+                  <div class="text"></div>
+                  <div class="buttons">
+                    <button class="btn-mini btn-mini-secondary btn-ignore">무시하고 진행</button>
+                    <button class="btn-mini btn-mini-primary btn-show-evidence">동료 평가 데이터 보기</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="core-value-card"
+                data-core-name="Passion"
+                data-ai-score="78">
+                <div class="core-value-header">
+                  <div>Passion</div>
+                </div>
+                <div class="core-value-sub">
+                  도전, 성장 의지
+                </div>
+                <div class="score-row">
+                  <input type="range" min="0" max="100" value="50" />
+                  <span class="score-value">50</span>
+                  <span class="deviation-pill">편차 경고</span>
+                </div>
+                <div class="deviation-inline hidden">
+                  <div class="text"></div>
+                  <div class="buttons">
+                    <button class="btn-mini btn-mini-secondary btn-ignore">무시하고 진행</button>
+                    <button class="btn-mini btn-mini-primary btn-show-evidence">동료 평가 데이터 보기</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="core-value-card"
+                data-core-name="Sustainability"
+                data-ai-score="85">
+                <div class="core-value-header">
+                  <div>Sustainability</div>
+                </div>
+                <div class="core-value-sub">
+                  안전, 책임, 지속가능
+                </div>
+                <div class="score-row">
+                  <input type="range" min="0" max="100" value="50" />
+                  <span class="score-value">50</span>
+                  <span class="deviation-pill">편차 경고</span>
+                </div>
+                <div class="deviation-inline hidden">
+                  <div class="text"></div>
+                  <div class="buttons">
+                    <button class="btn-mini btn-mini-secondary btn-ignore">무시하고 진행</button>
+                    <button class="btn-mini btn-mini-primary btn-show-evidence">동료 평가 데이터 보기</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <div class="section-title" style="margin-bottom:0;">
+                리더 코멘트 (선택)
+              </div>
+              <button class="btn-mini btn-mini-primary" id="commentSuggestBtn">
+                AI 코멘트 추천 받기
+              </button>
+            </div>
+            <textarea
+              class="comment-area"
+              id="leaderComment"
+              placeholder="이번 평가에서 강조하고 싶은 점을 적어주세요. (예: 협업에서의 강점, 향후 성장 방향 등)"
+            ></textarea>
+          </div>
+
+          <div class="nav-buttons">
+            <button class="btn btn-secondary" data-goto-step="1">
+              ← 이전: 업무 목표 달성도 화면으로
+            </button>
+            <button class="btn btn-primary" data-goto-step="3">
+              다음: AI 결과 보기 →
+            </button>
+          </div>
+        </section>
+
+        <!-- STEP 3 -->
+        <section class="step-panel" data-step-panel="3">
+          <div class="panel">
+            <div class="section-title">
+              AI 기반 권장 등급 & 설명 (데모)
+              <span class="badge">Step 3</span>
+            </div>
+            <div class="ai-result-grade">
+              AI 권장 등급 (AI 기준): <span id="aiFinalGradeDisplay">-</span>
+            </div>
+            <div class="ai-result-subgrade">
+              리더 입력 점수 기준 계산 등급: <span id="leaderModelGradeDisplay">-</span>
+            </div>
+            <div id="aiExplanation" class="ai-explanation"></div>
+          </div>
+
+          <div class="panel">
+            <div class="section-title">
+              리더 최종 등급 확정
+            </div>
+            <div class="grade-row">
+              <div>
+                <label for="leaderFinalGrade">리더가 확정하는 최종 등급</label>
+              </div>
+              <select id="leaderFinalGrade">
+                <option value="S">S</option>
+                <option value="A" selected>A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+                <option value="D">D</option>
+              </select>
+              <div id="gradeDeviationWarning" class="grade-warning hidden"></div>
+              <div class="small-note">
+                ※ 실제 서비스에서는 이 로그를 HR이 분석해
+                "AI 대비 어느 리더가 일관되게 <strong>관대하게</strong> 또는 <strong>냉정하게</strong> 평가하는지"를 파악하고,
+                리더의 평가 성향과 의사결정 과정 요약을 <strong>구성원에게 설명 형태로 전달</strong>합니다.
+              </div>
+            </div>
+          </div>
+
+          <div class="nav-buttons">
+            <button class="btn btn-secondary" data-goto-step="2">
+              ← 이전: 핵심 가치 준수도로 돌아가기
+            </button>
+            <button class="btn btn-primary" id="finishBtn">
+              (데모) 평가 완료
+            </button>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- 로딩 오버레이 -->
+  <div id="loadingOverlay" class="loading-backdrop hidden">
+    <div class="loading-card">
+      <p id="loadingMessage">AI가 데이터를 정리하는 중입니다...</p>
+      <div class="spinner"></div>
+    </div>
+  </div>
+
+  <!-- 동료 평가 데이터 팝업 -->
+  <div id="peerModal" class="modal-backdrop hidden">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <div class="modal-title" id="peerModalTitle">동료 평가 데이터 확인</div>
+      </div>
+      <div class="modal-sub" id="peerModalSub">
+        동료 평가에서 추출된 관련 키워드입니다. 클릭하여 구체적인 예시를 확인해 보세요.
+      </div>
+      <div class="chip-row" id="peerTagRow"></div>
+      <div class="modal-body-box">
+        <div id="peerExampleText"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-mini btn-mini-secondary" id="peerModalFooterCloseBtn">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentStep = 1;
+    const TOTAL_STEPS = 3;
+    const DEVIATION_THRESHOLD = 15;
+
+    /* 등급 스케일: D < C < B < A < S */
+    const GRADE_ORDER = ["D", "C", "B", "A", "S"];
+
+    let kpiChart = null;
+    let kpiLowestIndex = 0;
+    let isLoading = false;
+    window.currentAiGrade = "A";
+    window.leaderModelGrade = "A";
+
+    const PERSON_PROFILES = {
+      "박재현": {
+        raw12: [60, 55, 48, 52, 62, 70, 75, 80, 82, 84, 86, 88],
+        adj12: [65, 60, 63, 66, 70, 76, 80, 84, 86, 88, 90, 92],
+        issues: [
+          { monthIndex: 2, label: "내부: 신규 시스템 도입으로 초기 생산성 저하" },
+          { monthIndex: 3, label: "외부: 공급망 이슈로 납기 지연" }
+        ]
+      },
+      "박태희": {
+        raw12: [92, 90, 89, 91, 93, 95, 96, 95, 94, 96, 97, 98],
+        adj12: [92, 92, 92, 93, 95, 96, 97, 96, 95, 97, 98, 99],
+        issues: [
+          { monthIndex: 6, label: "외부: 환율 급등으로 영업이익 변동" }
+        ]
+      },
+      "박정호": {
+        raw12: [80, 75, 60, 55, 58, 62, 70, 78, 80, 82, 85, 86],
+        adj12: [82, 78, 68, 65, 66, 70, 76, 82, 84, 86, 88, 90],
+        issues: [
+          { monthIndex: 2, label: "내부: 경영진 사법 리스크로 신규 계약 승인 지연" },
+          { monthIndex: 3, label: "외부: 주요 고객사 구조조정으로 발주 축소" }
+        ]
+      },
+      "박재원": {
+        raw12: [45, 48, 50, 55, 60, 68, 72, 78, 82, 85, 88, 90],
+        adj12: [55, 58, 60, 65, 70, 76, 80, 84, 86, 89, 92, 94],
+        issues: [
+          { monthIndex: 0, label: "내부: 신규 전환 배치로 초기 적응 기간" },
+          { monthIndex: 1, label: "외부: 주요 설비 교체로 생산 일시 중단" }
+        ]
+      },
+      "하유림": {
+        raw12: [95, 92, 90, 88, 86, 84, 82, 80, 78, 79, 80, 82],
+        adj12: [96, 93, 92, 90, 88, 86, 84, 84, 83, 84, 85, 86],
+        issues: [
+          { monthIndex: 5, label: "내부: 조직 개편으로 역할 변경·조정" },
+          { monthIndex: 7, label: "외부: 시장 수요 감소로 목표 상향 조정" }
+        ]
+      },
+      "default": {
+        raw12: [92, 45, 55, 60, 70, 78, 82, 85, 88, 90, 92, 94],
+        adj12: [92, 70, 72, 75, 80, 84, 86, 88, 90, 92, 94, 96],
+        issues: [
+          { monthIndex: 1, label: "외부: 지진으로 공장 가동 중단" },
+          { monthIndex: 2, label: "내부: 경영진 사법 리스크로 신규 계약 승인 지연" }
+        ]
+      }
+    };
+
+    /* 핵심 가치 준수도 AI 예상 점수 */
+    const CORE_AI_PROFILES = {
+      "박재현": {
+        "Customer Focus": 88,
+        "Agility": 80,
+        "Collaboration": 92,
+        "Passion": 83,
+        "Sustainability": 85
+      },
+      "박태희": {
+        "Customer Focus": 90,
+        "Agility": 92,
+        "Collaboration": 88,
+        "Passion": 86,
+        "Sustainability": 89
+      },
+      "박정호": {
+        "Customer Focus": 78,
+        "Agility": 74,
+        "Collaboration": 82,
+        "Passion": 76,
+        "Sustainability": 80
+      },
+      "박재원": {
+        "Customer Focus": 72,
+        "Agility": 79,
+        "Collaboration": 75,
+        "Passion": 88,
+        "Sustainability": 77
+      },
+      "하유림": {
+        "Customer Focus": 85,
+        "Agility": 90,
+        "Collaboration": 87,
+        "Passion": 91,
+        "Sustainability": 88
+      },
+      "default": {
+        "Customer Focus": 88,
+        "Agility": 82,
+        "Collaboration": 90,
+        "Passion": 78,
+        "Sustainability": 85
+      }
+    };
+
+    const MONTH_LABELS_12 = [
+      "1월","2월","3월","4월","5월","6월",
+      "7월","8월","9월","10월","11월","12월"
+    ];
+
+    let currentMonths = MONTH_LABELS_12.slice(0, 6);
+    let currentRawSeries = PERSON_PROFILES.default.raw12.slice(0, 6);
+    let currentAdjSeries = PERSON_PROFILES.default.adj12.slice(0, 6);
+    let currentIssues = PERSON_PROFILES.default.issues.filter(i => i.monthIndex < 6);
+
+    const PEER_DATA = {
+      "Customer Focus": {
+        title: "Customer Focus",
+        tags: [
+          "#고객집중", "#니즈파악", "#VOC반영", "#서비스개선", "#재구매기여"
+        ],
+        examples: {
+          "#고객집중": "동료 평가에서, 해당 구성원은 고객 이슈 발생 시 가장 먼저 상황을 파악하고 대응 방안을 제시한 사례가 반복적으로 언급되었습니다.",
+          "#니즈파악": "신규 제품 런칭 전, 고객사의 숨은 니즈를 인터뷰를 통해 발굴하여 제안서 방향을 수정한 덕분에 수주로 이어졌다는 피드백이 있습니다.",
+          "#VOC반영": "월간 VOC 리포트에서 반복 지적된 불편사항을 취합하여 개선 태스크를 주도했다는 동료 의견이 다수입니다.",
+          "#서비스개선": "콜센터/AS팀과 협업해 응대 스크립트를 수정하고, 응답 리드타임을 단축시킨 사례가 공유되었습니다.",
+          "#재구매기여": "기존 고객사의 재계약 과정에서, 세밀한 사후관리와 이슈 관리 덕분에 타사 경쟁제안 대비 신뢰를 확보했다는 평가가 있습니다."
+        }
+      },
+      "Agility": {
+        title: "Agility",
+        tags: [
+          "#변화대응", "#실험정신", "#학습공유", "#의사결정속도", "#리스크관리"
+        ],
+        examples: {
+          "#변화대응": "시장 가격 변동에 맞춰 견적 구조를 재설계하고, 단기간에 새로운 가격 정책을 롤아웃한 사례가 있습니다.",
+          "#실험정신": "파일럿 프로젝트에서 실패 가능성이 높은 시도를 자발적으로 제안하고, 결과를 팀에 공유하며 다음 사이클에 반영했습니다.",
+          "#학습공유": "사내 러닝 세션을 열어 본인이 수강한 외부 교육 내용을 요약·공유했다는 동료 피드백이 있습니다.",
+          "#의사결정속도": "긴급 이슈 발생 시, 필요한 정보를 빠르게 모아 의사결정 옵션을 제시하여 리더의 판단 시간을 줄여주었다는 의견이 있습니다.",
+          "#리스크관리": "새로운 거래 구조 도입 시 예상 리스크를 사전에 정리해 법무·재무팀과 협의한 뒤 진행했다는 평가가 나옵니다."
+        }
+      },
+      "Collaboration": {
+        title: "Collaboration",
+        tags: [
+          "#협업", "#커뮤니케이션", "#관계형성", "#상호존중", "#조직문화적합도"
+        ],
+        examples: {
+          "#협업": "“OO님은 팀 프로젝트에서 협업을 통해 동료와 함께 문제를 해결하며 목표를 달성했습니다.”라는 문장이 여러 동료 평가에 반복 등장합니다.",
+          "#커뮤니케이션": "타 팀과의 미팅에서 이해하기 어려운 기술 내용을 쉽게 번역해 주어 의사결정을 도왔다는 피드백이 있습니다.",
+          "#관계형성": "신규 입사자 온보딩 시 비공식 멘토 역할을 맡아, 조직 적응을 돕는 과정이 긍정적으로 평가됩니다.",
+          "#상호존중": "의견이 다른 상황에서도 상대방의 관점을 먼저 요약해 준 뒤 본인의 의견을 제시해, 회의 분위기를 부드럽게 만들었다는 의견이 있습니다.",
+          "#조직문화적합도": "사내 행사와 사소한 업무에서도 주도적으로 참여하며 ‘함께 일하기 편한 동료’라는 표현이 자주 등장합니다."
+        }
+      },
+      "Passion": {
+        title: "Passion",
+        tags: [
+          "#주도성", "#도전적인목표", "#피드백수용", "#자기계발", "#기여의지"
+        ],
+        examples: {
+          "#주도성": "담당 범위를 넘어서는 영역도 스스로 개선안을 찾아 제안했다는 동료 평가가 있습니다.",
+          "#도전적인목표": "분기 OKR 수립 시 스스로 높은 수준의 KPI를 설정하고, 실패 가능성도 감수하겠다고 선언한 사례가 언급됩니다.",
+          "#피드백수용": "피드백을 방어적으로 받아들이지 않고, 다음 스프린트 계획에 바로 반영했다는 의견이 반복적으로 나오고 있습니다.",
+          "#자기계발": "업무 후 온라인 강의를 수강하고, 학습 내용을 팀 위키에 정리해 공유하는 모습이 긍정적으로 평가됩니다.",
+          "#기여의지": "“팀에 도움이 된다면 야근보다는 프로세스 개선을 먼저 고민하는 동료”라는 표현이 등장합니다."
+        }
+      },
+      "Sustainability": {
+        title: "Sustainability",
+        tags: [
+          "#안전의식", "#컴플라이언스", "#장기관점", "#리스크사전공유", "#ESG기여"
+        ],
+        examples: {
+          "#안전의식": "현장 방문 시 안전수칙을 준수하지 않는 사례를 발견하고, 바로 리포트하여 재발 방지 교육을 이끌었다는 평가가 있습니다.",
+          "#컴플라이언스": "규정상 애매한 거래 구조에 대해 ‘일단 진행’보다 관련 부서와의 사전 확인을 우선했다는 동료 의견이 있습니다.",
+          "#장기관점": "단기 매출보다 고객과의 신뢰를 우선하며, 장기 파트너십을 고려한 제안을 준비했다는 평가가 있습니다.",
+          "#리스크사전공유": "프로젝트 리스크를 초기에 정리하여 팀과 공유하고, 대응 계획을 함께 수립했다는 피드백이 있습니다.",
+          "#ESG기여": "환경·안전 관련 사내 캠페인에 자발적으로 참여하고, 팀원들을 독려한 사례가 보고됩니다."
+        }
+      }
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+      setupSteps();
+      setupPresetSelect();
+      setupCoreValueInputs();
+      setupLeaderGradeSelect();
+      setupFinishButton();
+      setupChartGenerateButton();
+      setupPeerModal();
+      setupCommentSuggestButton();
+
+      setCoreValueAiScoresFor("");
+      resetCoreValueSlidersTo50();
+    });
+
+    function setupSteps() {
+      const buttons = document.querySelectorAll("[data-goto-step]");
+      buttons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const step = parseInt(btn.getAttribute("data-goto-step"), 10);
+          if (!isNaN(step)) {
+            goToStepWithLoading(step);
+          }
+        });
+      });
+      showStep(1);
+    }
+
+    function goToStepWithLoading(step) {
+      if (step === currentStep || isLoading) return;
+      const overlay = document.getElementById("loadingOverlay");
+      const msg = document.getElementById("loadingMessage");
+      if (msg) msg.textContent = "AI가 데이터를 정리하는 중입니다...";
+      if (!overlay) {
+        showStep(step);
+        return;
+      }
+      isLoading = true;
+      overlay.classList.remove("hidden");
+      setTimeout(() => {
+        showStep(step);
+        overlay.classList.add("hidden");
+        isLoading = false;
+      }, 1000);
+    }
+
+    function updateStepperFill() {
+      const fill = document.getElementById("stepperFill");
+      if (!fill) return;
+      const ratio = (currentStep - 1) / (TOTAL_STEPS - 1);
+      fill.style.width = `${ratio * 100}%`;
+    }
+
+    function showStep(step) {
+      currentStep = step;
+      const panels = document.querySelectorAll(".step-panel");
+      panels.forEach((panel) => {
+        const panelStep = parseInt(panel.getAttribute("data-step-panel"), 10);
+        panel.classList.toggle("active", panelStep === step);
+      });
+
+      const indicators = document.querySelectorAll(".step-indicator");
+      indicators.forEach((ind) => {
+        const s = parseInt(ind.getAttribute("data-step"), 10);
+        ind.classList.remove("active", "completed");
+        if (s === step) ind.classList.add("active");
+        else if (s < step) ind.classList.add("completed");
+      });
+
+      updateStepperFill();
+      if (step === 3) computeAiResult();
+    }
+
+    function setupPresetSelect() {
+      const preset = document.getElementById("employeePreset");
+      if (!preset) return;
+      preset.addEventListener("change", () => {
+        const nameInput = document.getElementById("employeeName");
+        const teamInput = document.getElementById("employeeTeam");
+        const jobInput = document.getElementById("employeeJob");
+        const periodInput = document.getElementById("periodName");
+
+        const name = preset.value;
+        if (!name) {
+          if (nameInput) nameInput.value = "";
+          if (teamInput) teamInput.value = "";
+          if (jobInput) jobInput.value = "";
+          if (periodInput) periodInput.value = "";
+          return;
+        }
+
+        const grades = ["사원", "선임", "책임"];
+        const randomGrade = grades[Math.floor(Math.random() * grades.length)];
+
+        /* 모든 구성원 평가기간: 2025 상반기 */
+        const mapping = {
+          "박재현": { team: "리더십 개발팀", period: "2025 상반기" },
+          "박태희": { team: "리더십 개발팀", period: "2025 상반기" },
+          "박정호": { team: "리더십 개발팀", period: "2025 상반기" },
+          "박재원": { team: "리더십 개발팀", period: "2025 상반기" },
+          "하유림": { team: "리더십 개발팀", period: "2025 상반기" }
+        };
+        const baseInfo = mapping[name] || { team: "리더십 개발팀", period: "2025 상반기" };
+
+        if (nameInput) nameInput.value = name;
+        if (teamInput) teamInput.value = baseInfo.team;
+        if (jobInput) jobInput.value = `인사/${randomGrade}`;
+        if (periodInput) periodInput.value = baseInfo.period;
+
+        setCoreValueAiScoresFor(name);
+        resetCoreValueSlidersTo50();
+      });
+    }
+
+    function setupChartGenerateButton() {
+      const btn = document.getElementById("generateChartBtn");
+      const placeholder = document.getElementById("kpiPlaceholder");
+      const canvas = document.getElementById("kpiChart");
+      if (!btn || !placeholder || !canvas) return;
+
+      btn.addEventListener("click", () => {
+        const name = document.getElementById("employeeName").value.trim();
+        const team = document.getElementById("employeeTeam").value.trim();
+        const job = document.getElementById("employeeJob").value.trim();
+        const period = document.getElementById("periodName").value.trim();
+        if (!name || !team || !job || !period) {
+          alert("구성원 기본 정보를 모두 입력해 주세요.");
+          return;
+        }
+
+        const evalTypeInput = document.querySelector('input[name="evalType"]:checked');
+        const evalType = evalTypeInput ? evalTypeInput.value : "mid";
+        const monthsCount = evalType === "annual" ? 12 : 6;
+
+        const profile = PERSON_PROFILES[name] || PERSON_PROFILES.default;
+
+        currentMonths = MONTH_LABELS_12.slice(0, monthsCount);
+        currentRawSeries = profile.raw12.slice(0, monthsCount);
+        currentAdjSeries = profile.adj12.slice(0, monthsCount);
+        currentIssues = profile.issues.filter(i => i.monthIndex < monthsCount);
+
+        setCoreValueAiScoresFor(name);
+
+        placeholder.classList.add("hidden");
+        canvas.classList.remove("hidden");
+        renderKpiChart();
+      });
+    }
+
+    function renderKpiChart() {
+      const canvas = document.getElementById("kpiChart");
+      if (!canvas || typeof Chart === "undefined") return;
+      const ctx = canvas.getContext("2d");
+
+      let minVal = currentRawSeries[0];
+      kpiLowestIndex = 0;
+      for (let i = 1; i < currentRawSeries.length; i++) {
+        if (currentRawSeries[i] < minVal) {
+          minVal = currentRawSeries[i];
+          kpiLowestIndex = i;
+        }
+      }
+
+      const pointColors = currentRawSeries.map((_, idx) =>
+        idx === kpiLowestIndex ? "#D7177B" : "#6b6b6b"
+      );
+      const baseColor = "#6b6b6b";
+
+      if (kpiChart) {
+        kpiChart.data.labels = currentMonths;
+        kpiChart.data.datasets[0].data = currentRawSeries;
+        kpiChart.data.datasets[0].pointBackgroundColor = pointColors;
+        kpiChart.data.datasets[1].data = currentAdjSeries;
+        kpiChart.update();
+        return;
+      }
+
+      kpiChart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: currentMonths,
+          datasets: [
+            {
+              label: "실제 달성률(%)",
+              data: currentRawSeries,
+              tension: 0.35,
+              borderWidth: 2,
+              pointRadius: 4,
+              pointHoverRadius: 5,
+              borderColor: baseColor,
+              segment: {
+                borderColor: (ctxSeg) => {
+                  const i0 = ctxSeg.p0DataIndex;
+                  const i1 = ctxSeg.p1DataIndex;
+                  if (i0 === kpiLowestIndex || i1 === kpiLowestIndex) return "#D7177B";
+                  return baseColor;
+                },
+                borderWidth: (ctxSeg) => {
+                  const i0 = ctxSeg.p0DataIndex;
+                  const i1 = ctxSeg.p1DataIndex;
+                  return (i0 === kpiLowestIndex || i1 === kpiLowestIndex) ? 3 : 2;
+                }
+              },
+              pointBackgroundColor: pointColors,
+            },
+            {
+              label: "이슈 고려 보정 달성률(%)",
+              data: currentAdjSeries,
+              tension: 0.35,
+              borderWidth: 2,
+              pointRadius: 3,
+              pointHoverRadius: 4,
+              borderColor: "#70C0E6",
+              borderDash: [4, 2],
+              pointBackgroundColor: "#70C0E6",
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  const monthIdx = context.dataIndex;
+                  const value = context.parsed.y;
+                  const issue = currentIssues.find(i => i.monthIndex === monthIdx);
+                  if (context.datasetIndex === 1) {
+                    const rawVal = currentRawSeries[monthIdx];
+                    const adjVal = currentAdjSeries[monthIdx];
+                    const lines = [
+                      `이슈 고려 보정 달성률: ${adjVal.toFixed(1)}%`,
+                      `실제: ${rawVal.toFixed(1)}% → 보정: ${adjVal.toFixed(1)}%`,
+                    ];
+                    if (issue) lines.push(`사유: ${issue.label}`);
+                    return lines;
+                  } else {
+                    let base = `실제 달성률: ${value.toFixed(1)}%`;
+                    if (issue) base += ` · 이슈: ${issue.label}`;
+                    if (monthIdx === kpiLowestIndex) base += " · 변곡점(이슈 영향 최대)";
+                    return base;
+                  }
+                },
+              },
+            },
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              ticks: { stepSize: 20 },
+            },
+          },
+        },
+      });
+    }
+
+    function computeQuantAverage() {
+      const sum = currentAdjSeries.reduce((acc, v) => acc + v, 0);
+      return sum / currentAdjSeries.length;
+    }
+
+    function setupCoreValueInputs() {
+      const cards = document.querySelectorAll(".core-value-card");
+      cards.forEach((card) => {
+        const range = card.querySelector('input[type="range"]');
+        const valueSpan = card.querySelector(".score-value");
+        const deviationPill = card.querySelector(".deviation-pill");
+        const deviationBox = card.querySelector(".deviation-inline");
+        const deviationText = deviationBox.querySelector(".text");
+        const ignoreBtn = deviationBox.querySelector(".btn-ignore");
+        const showEvidenceBtn = deviationBox.querySelector(".btn-show-evidence");
+
+        const coreName = card.getAttribute("data-core-name");
+
+        range.addEventListener("input", () => {
+          const leaderScore = Number(range.value);
+          valueSpan.textContent = leaderScore.toString();
+
+          const aiScore = Number(card.getAttribute("data-ai-score")) || 0;
+          const diff = Math.abs(leaderScore - aiScore);
+
+          if (diff >= DEVIATION_THRESHOLD) {
+            deviationPill.classList.add("visible");
+            deviationBox.classList.remove("hidden");
+            deviationText.innerHTML =
+              `<strong>${coreName}</strong> 항목에서 AI 예상 점수는 <strong>${aiScore}점</strong>, ` +
+              `리더 입력 점수는 <strong>${leaderScore}점</strong>으로 <strong>${diff}점</strong> 차이가 있습니다. ` +
+              `동료 평가 데이터를 참고해 점수를 한 번 더 점검할 수 있습니다.`;
+          } else {
+            deviationPill.classList.remove("visible");
+            deviationBox.classList.add("hidden");
+          }
+        });
+
+        ignoreBtn.addEventListener("click", () => {
+          deviationBox.classList.add("hidden");
+        });
+
+        showEvidenceBtn.addEventListener("click", () => {
+          openPeerModal(coreName);
+        });
+      });
+    }
+
+    function getCoreValuesInfo() {
+      const cards = document.querySelectorAll(".core-value-card");
+      let sum = 0;
+      let count = 0;
+      let topName = "";
+      let topScore = -1;
+      let lowName = "";
+      let lowScore = 101;
+
+      cards.forEach((card) => {
+        const range = card.querySelector('input[type="range"]');
+        if (!range) return;
+        const score = Number(range.value) || 0;
+        sum += score;
+        count += 1;
+        if (score > topScore) {
+          topScore = score;
+          topName = card.getAttribute("data-core-name") || "";
+        }
+        if (score < lowScore) {
+          lowScore = score;
+          lowName = card.getAttribute("data-core-name") || "";
+        }
+      });
+
+      return {
+        avg: count > 0 ? sum / count : 0,
+        topName,
+        topScore,
+        lowName,
+        lowScore
+      };
+    }
+
+    function getAiCoreInfo() {
+      const cards = document.querySelectorAll(".core-value-card");
+      let sum = 0;
+      let count = 0;
+      let topName = "";
+      let topScore = -1;
+
+      cards.forEach((card) => {
+        const score = Number(card.getAttribute("data-ai-score")) || 0;
+        sum += score;
+        count += 1;
+        if (score > topScore) {
+          topScore = score;
+          topName = card.getAttribute("data-core-name") || "";
+        }
+      });
+
+      return {
+        avg: count > 0 ? sum / count : 0,
+        topName,
+        topScore
+      };
+    }
+
+    function scoreToGrade(score) {
+      if (score >= 95) return "S";
+      if (score >= 85) return "A";
+      if (score >= 75) return "B";
+      if (score >= 65) return "C";
+      return "D";
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    function computeAiResult() {
+      const name =
+        document.getElementById("employeeName").value.trim() || "구성원";
+      const team =
+        document.getElementById("employeeTeam").value.trim() || "어떤 팀";
+      const job =
+        document.getElementById("employeeJob").value.trim() || "어떤 직무";
+      const period =
+        document.getElementById("periodName").value.trim() || "2025 상반기";
+
+      const quantAvg = computeQuantAverage();
+      const coreInfoLeader = getCoreValuesInfo();
+      const coreInfoAi = getAiCoreInfo();
+
+      const quantWeight = 0.8;
+      const qualWeight = 0.2;
+
+      const aiOverallScore =
+        quantAvg * quantWeight + coreInfoAi.avg * qualWeight;
+      const leaderOverallScore =
+        quantAvg * quantWeight + coreInfoLeader.avg * qualWeight;
+
+      const aiGrade = scoreToGrade(aiOverallScore);
+      const leaderModelGrade = scoreToGrade(leaderOverallScore);
+
+      window.currentAiGrade = aiGrade;
+      window.leaderModelGrade = leaderModelGrade;
+
+      document.getElementById("aiFinalGradeDisplay").textContent = aiGrade;
+      document.getElementById("leaderModelGradeDisplay").textContent =
+        leaderModelGrade;
+
+      const peerBand =
+        aiOverallScore >= 95
+          ? "상위 5% 내"
+          : aiOverallScore >= 90
+          ? "상위 10% 내"
+          : aiOverallScore >= 85
+          ? "상위 20% 내"
+          : aiOverallScore >= 75
+          ? "상위 40% 내"
+          : "상위 60% 내";
+
+      const similarPercent = Math.floor(Math.random() * 41) + 40; // 40~80%
+
+      const explanationElem = document.getElementById("aiExplanation");
+      const rawComment = document.getElementById("leaderComment").value.trim();
+
+      let commentBlock = "<p>(추가 코멘트가 입력되지 않았습니다.)</p>";
+      if (rawComment) {
+        commentBlock = `<p><em>"${escapeHtml(rawComment)}"</em></p>`;
+      }
+
+      const compareSentence =
+        aiGrade === leaderModelGrade
+          ? "AI가 자체 분석한 등급과 리더가 입력한 정성 점수를 기준으로 계산한 등급이 동일합니다."
+          : `AI가 자체 분석한 등급(${aiGrade})과 리더 입력 점수 기준 계산 등급(${leaderModelGrade}) 사이에 차이가 있습니다. 리더 최종 등급을 선택할 때 이 차이를 참고해 볼 수 있습니다.`;
+
+      const html = `
+        <p><strong>${name}</strong>님은 <strong>${period}</strong> 동안 <strong>${team}</strong>에서 <strong>${job}</strong> 역할을 수행한 결과, AI는 자체 분석 기준으로 전체적으로 <strong>${aiGrade}</strong> 등급 수준의 성과라고 판단했습니다.</p>
+        <p>업무 목표 달성도 관점에서 보정된 평균 목표 달성률은 약 <strong>${quantAvg.toFixed(
+          1
+        )}%</strong>로, 동일 직무 구성원 중 <strong>${peerBand}</strong>에 해당하는 수준으로 가정했습니다. ${name}님과 유사한 성과를 보인 구성원의 약 <strong>${similarPercent}%</strong>는 <strong>${aiGrade}</strong> 등급을 받은 것으로 확인되었습니다.</p>
+        <p>핵심 가치 준수도 관점에서, 리더 입력 점수 기준으로는 특히 <strong>${coreInfoLeader.topName}</strong> 항목의 점수가 상대적으로 높게 나타났습니다. 이는 리더가 단순 실적뿐 아니라 해당 가치 요소를 중요하게 보고 있다는 신호로 해석할 수 있습니다.</p>
+        <p>AI는 자체 분석 시 업무 목표 달성도 지표에 약 <strong>${
+          quantWeight * 100
+        }%</strong>, 핵심 가치 준수도에 약 <strong>${
+        qualWeight * 100
+      }%</strong>의 가중치를 두어 종합 점수를 계산했습니다. ${compareSentence}</p>
+        <p>리더의 평가 관련 추가 코멘트는 다음과 같습니다.</p>
+        ${commentBlock}
+        <p>위 내용은 구성원에게도 동일하게 전달됩니다.</p>
+      `;
+      explanationElem.innerHTML = html;
+
+      const leaderSelect = document.getElementById("leaderFinalGrade");
+      if (leaderSelect) {
+        leaderSelect.value = aiGrade;
+        checkGradeDeviation();
+      }
+    }
+
+    function setupLeaderGradeSelect() {
+      const select = document.getElementById("leaderFinalGrade");
+      if (!select) return;
+      select.addEventListener("change", checkGradeDeviation);
+    }
+
+    function checkGradeDeviation() {
+      const select = document.getElementById("leaderFinalGrade");
+      const warning = document.getElementById("gradeDeviationWarning");
+      if (!select || !warning) return;
+      const leaderGrade = select.value;
+      const aiGrade = window.currentAiGrade || "A";
+
+      const li = GRADE_ORDER.indexOf(leaderGrade);
+      const ai = GRADE_ORDER.indexOf(aiGrade);
+
+      if (li === -1 || ai === -1) {
+        warning.classList.add("hidden");
+        return;
+      }
+
+      const diff = Math.abs(li - ai);
+      if (diff >= 2) {
+        warning.textContent = `AI 권장 등급(${aiGrade})과 리더 최종 등급(${leaderGrade}) 간 편차가 큽니다. 유사 성과자 대비 지나치게 관대하거나, 지나치게 냉정하지 않은지 한 번 더 점검해 주세요.`;
+        warning.classList.remove("hidden");
+      } else {
+        warning.classList.add("hidden");
+      }
+    }
+
+    function setupCommentSuggestButton() {
+      const btn = document.getElementById("commentSuggestBtn");
+      if (!btn) return;
+      btn.addEventListener("click", () => {
+        const quantAvg = computeQuantAverage();
+        const coreInfo = getCoreValuesInfo();
+        const name =
+          document.getElementById("employeeName").value.trim() || "해당 구성원";
+
+        const focusArea = coreInfo.lowName || "보완이 필요한 영역";
+        const strongArea = coreInfo.topName || "강점 영역";
+
+        const suggestion =
+          `${name}님의 이번 평가에서는 업무 목표 달성도(이슈 고려 보정 기준 약 ${quantAvg.toFixed(
+            1
+          )}%) 대비 ` +
+          `핵심 가치 준수도 중 <${strongArea}>에서 강점이 두드러지고, <${focusArea}>에서 상대적으로 보완 여지가 있는 것으로 보입니다.\n\n` +
+          `• 강점: <${strongArea}> 영역에서의 행동을 다음 평가 기간에도 유지·확대할 수 있도록 지원하겠습니다.\n` +
+          `• 보완: <${focusArea}> 관련하여 구체적인 행동 목표를 함께 설정하고, 중간 점검을 통해 성장 과정을 모니터링하겠습니다.\n\n` +
+          `이번 평가는 단순 등급 부여가 아니라, ${name}님의 장기적인 성장 방향을 함께 설계하기 위한 과정이라는 점을 함께 공유하고 싶습니다.`;
+
+        const textarea = document.getElementById("leaderComment");
+        if (textarea) textarea.value = suggestion;
+      });
+    }
+
+    function setupPeerModal() {
+      const backdrop = document.getElementById("peerModal");
+      const footerClose = document.getElementById("peerModalFooterCloseBtn");
+
+      const close = () => { backdrop.classList.add("hidden"); };
+
+      footerClose.addEventListener("click", close);
+      backdrop.addEventListener("click", (e) => {
+        if (e.target === backdrop) close();
+      });
+    }
+
+    function openPeerModal(coreName) {
+      const data = PEER_DATA[coreName] || PEER_DATA["Collaboration"];
+      const backdrop = document.getElementById("peerModal");
+      const title = document.getElementById("peerModalTitle");
+      const sub = document.getElementById("peerModalSub");
+      const tagRow = document.getElementById("peerTagRow");
+      const exampleText = document.getElementById("peerExampleText");
+
+      title.textContent = `동료 평가 데이터 확인 · ${data.title}`;
+      sub.textContent = "동료 평가에서 추출된 관련 키워드입니다. 클릭하여 구체적인 예시를 확인해 보세요.";
+
+      tagRow.innerHTML = "";
+      let firstKey = null;
+
+      data.tags.forEach((tagLabel, idx) => {
+        const chip = document.createElement("button");
+        chip.className = "chip";
+        chip.textContent = tagLabel;
+        if (idx === 0) {
+          chip.classList.add("active");
+          firstKey = tagLabel;
+        }
+        chip.addEventListener("click", () => {
+          const chips = tagRow.querySelectorAll(".chip");
+          chips.forEach((c) => c.classList.remove("active"));
+          chip.classList.add("active");
+          exampleText.textContent = data.examples[tagLabel] || "";
+        });
+        tagRow.appendChild(chip);
+      });
+
+      if (!firstKey && data.tags.length > 0) firstKey = data.tags[0];
+      exampleText.textContent = data.examples[firstKey] || "";
+
+      backdrop.classList.remove("hidden");
+    }
+
+    function setupFinishButton() {
+      const btn = document.getElementById("finishBtn");
+      btn.addEventListener("click", () => {
+        const name =
+          document.getElementById("employeeName").value.trim() || "구성원";
+        const aiGrade = window.currentAiGrade || "A";
+        const leaderGrade =
+          document.getElementById("leaderFinalGrade").value || "-";
+        const leaderModelGrade = window.leaderModelGrade || "-";
+        alert(
+          `데모 완료:\n\n이름: ${name}\nAI 권장 등급 (AI 기준): ${aiGrade}\n리더 입력 점수 기준 계산 등급: ${leaderModelGrade}\n리더 최종 등급: ${leaderGrade}\n\n※ 실제로 서버에 저장되지는 않고, 과제 발표용 화면 데모입니다.`
+        );
+      });
+    }
+
+    function setCoreValueAiScoresFor(name) {
+      const profile = CORE_AI_PROFILES[name] || CORE_AI_PROFILES["default"];
+      const cards = document.querySelectorAll(".core-value-card");
+      cards.forEach(card => {
+        const coreName = card.getAttribute("data-core-name");
+        const ai = profile[coreName] ?? 80;
+        card.setAttribute("data-ai-score", String(ai));
+      });
+    }
+
+    function resetCoreValueSlidersTo50() {
+      const cards = document.querySelectorAll(".core-value-card");
+      cards.forEach(card => {
+        const range = card.querySelector('input[type="range"]');
+        const valueSpan = card.querySelector(".score-value");
+        const deviationPill = card.querySelector(".deviation-pill");
+        const deviationBox = card.querySelector(".deviation-inline");
+        if (range) range.value = 50;
+        if (valueSpan) valueSpan.textContent = "50";
+        if (deviationPill) deviationPill.classList.remove("visible");
+        if (deviationBox) deviationBox.classList.add("hidden");
+      });
+    }
+  </script>
+</body>
+</html>
